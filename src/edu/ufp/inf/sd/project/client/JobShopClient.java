@@ -2,7 +2,6 @@ package edu.ufp.inf.sd.project.client;
 
 import edu.ufp.inf.sd.project.server.JobShopRI;
 import edu.ufp.inf.sd.project.server.auth.AuthFactoryRI;
-import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
@@ -19,7 +18,7 @@ import java.util.logging.Logger;
 public class JobShopClient{
 
     private SetupContextRMI contextRMI;
-    private JobGroupRI jobGroupRI;
+    private JobShopRI jobShopRI;
     private Scanner scanner;
     public boolean isLoggedIn = false;
     private AuthFactoryRI authRI;
@@ -220,21 +219,21 @@ public class JobShopClient{
         if (option.equals("*"))
             System.out.println("\n\t My username: " + this.sessionRI.showMyUsername());
 
-
+        /*
         // Create Group with Worker
         if (option.equals("3"))
-            jobgroup_create();
+            taskgroup_create();
 
         // List Groups
         if (option.equals("4"))
-            jobgroup_list();
+            taskgroup_list();
 
 
         // Add worker to group
         if (option.equals("5")) {
-            jobgroup_add_worker();
+            taskgroup_add_worker();
         }
-
+        */
 
     }
 
@@ -260,56 +259,6 @@ public class JobShopClient{
             this.sessionRI.logout();
             this.sessionRI = null;
             this.isLoggedIn = false;
-        }
-    }
-
-    ///Create JobGroup
-
-    private void jobgroup_create() throws RemoteException {
-        if (this.sessionRI != null) {
-
-            System.out.print("\nNome do Grupo: ");
-            String name = scanner.nextLine();
-
-            this.jobGroupRI = this.sessionRI.createJobGroup(name, 1000);
-
-            if (jobGroupRI != null) {
-                System.out.println("Criado com sucesso!");
-                //WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), taskGroupRI);
-            } else {
-                System.out.println("Erro ao criar grupo?");
-            }
-        }
-    }
-
-
-    /*
-     *  Ask and list all task groups
-     */
-    private void jobgroup_list() throws RemoteException {
-        if (this.sessionRI != null) {
-
-            ArrayList<String> groups = this.sessionRI.listJobGroups();
-            System.out.println("\n\t List of Groups:");
-            for (String name : groups)
-                System.out.println(name);
-        }
-    }
-
-    /*
-     *  Add worker to jobgroup
-     */
-    private void jobgroup_add_worker() throws RemoteException {
-        if (this.sessionRI != null) {
-
-
-
-            System.out.println("ID do Grupo: ");
-            String id = scanner.nextLine();
-            JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if(jobGroupRI != null) {
-                new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI);
-            }
         }
     }
 

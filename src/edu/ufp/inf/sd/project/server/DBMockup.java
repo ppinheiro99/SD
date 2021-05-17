@@ -1,6 +1,5 @@
 package edu.ufp.inf.sd.project.server;
 
-import edu.ufp.inf.sd.project.server.jobgroup.JobGroupImpl;
 import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
@@ -12,7 +11,7 @@ import java.util.HashMap;
 public class DBMockup {
 
     private final ArrayList<User> users = new ArrayList<>();
-    private final ArrayList<JobGroupImpl> jobGroups = new ArrayList<>();
+    private final ArrayList<JobGroupRI> taskGroups = new ArrayList<>();
 
 
     ///////////////////////////////////////////
@@ -85,37 +84,6 @@ public class DBMockup {
                 return;
             }
         }
-    }
-
-
-     /*
-            JOB GROUPS
-     */
-
-    // Add Group
-    public void addJobGroupRi(JobGroupImpl group){
-        this.jobGroups.add(group);
-    }
-
-    // Search Group
-    public JobGroupImpl findJobGroupRi(int id){
-        for (JobGroupImpl jobGroup : this.jobGroups)
-            if(jobGroup.getId() == id)
-                return jobGroup;
-
-        return null;
-    }
-
-    public ArrayList<String> getJobGroupsNames() {
-        ArrayList<String> names = new ArrayList<>();
-        for (JobGroupImpl jg : jobGroups) {
-            names.add(jg.getId() + " | " + jg.getName());
-        }
-        return names;
-    }
-
-    public ArrayList<JobGroupImpl> getJobGroups() {
-        return this.jobGroups;
     }
 
 }
