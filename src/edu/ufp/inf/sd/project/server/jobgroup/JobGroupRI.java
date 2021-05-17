@@ -15,4 +15,6 @@ public interface JobGroupRI extends Remote {
 
     public State getState() throws RemoteException;
 
+    public int getId() throws RemoteException;
+
 }
