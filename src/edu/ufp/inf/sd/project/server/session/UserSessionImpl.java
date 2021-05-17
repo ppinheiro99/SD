@@ -1,5 +1,7 @@
 package edu.ufp.inf.sd.project.server.session;
 
+import edu.ufp.inf.sd.project.server.jobgroup.JobGroupImpl;
+import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.project.server.DBMockup;
 import edu.ufp.inf.sd.project.server.auth.AuthFactoryImpl;
@@ -14,6 +16,7 @@ public class UserSessionImpl extends UnicastRemoteObject implements UserSessionR
     private User user;
     private DBMockup db;
     private AuthFactoryImpl factory;
+    private UserSessionRI sessionRI;
 
     ///////////////////////////////////////////
     // Constructor
@@ -72,6 +75,9 @@ public class UserSessionImpl extends UnicastRemoteObject implements UserSessionR
     }
 
 
+
+
+
     ///////////////////////////////////////////
     // Get's & Set's
     public User getUser() {
@@ -92,4 +98,51 @@ public class UserSessionImpl extends UnicastRemoteObject implements UserSessionR
     public void setFactory(AuthFactoryImpl factory) {
         this.factory = factory;
     }
+
+
+    /*
+     *  Create JobGroup
+     */
+    @Override
+    public JobGroupRI createJobGroup(String name, int coins) throws RemoteException {
+        System.out.println("[User: " + this.user.getUsername() + "] novo grupo: " + name);
+        JobGroupImpl jobGroup = new JobGroupImpl(coins,name,this.getUser().getUsername());
+        this.db.addJobGroupRi(jobGroup);
+        return jobGroup;
+    }
+
+    @Override
+    /*
+     *  List all JobGroup
+     */
+    public ArrayList<String> listJobGroups() throws RemoteException {
+        return this.db.getJobGroupsNames();
+    }
+
+    /*
+     *  Delete JobGroup
+     */
+    public void deleteJobGroup(int id) throws RemoteException {
+        ArrayList<JobGroupImpl> jobGroups = this.db.getJobGroups();
+        for (JobGroupImpl jobgroup : jobGroups) {
+            if(jobgroup.getId() == id){
+                jobgroup.delete();
+                this.db.getJobGroups().remove(jobgroup);
+            }
+        }
+    }
+
+    /*
+     *  Get JobGroup Join Impl.
+     */
+    public JobGroupRI joinJobGroup(int id) throws RemoteException {
+        ArrayList<JobGroupImpl> jobGroups = this.db.getJobGroups();
+        for (JobGroupImpl jobgroup : jobGroups) {
+            if(jobgroup.getId() == id){
+                return jobgroup;
+            }
+        }
+        return null;
+    }
+
 }

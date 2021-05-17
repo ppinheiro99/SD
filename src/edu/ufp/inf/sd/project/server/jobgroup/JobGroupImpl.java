@@ -17,7 +17,34 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private ArrayList<State> states = new ArrayList<>();
     private ArrayList<ObserverRI> observers = new ArrayList<>();
 
-    // States
+    // JobGroup Info
+    transient private int coins;
+    private final int id;
+    private final String name;
+    private final String owner;
+
+    public int getCoins() {
+        return coins;
+    }
+
+    public void setCoins(int coins) {
+        this.coins = coins;
+    }
+
+
+     public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+// States
     //transient private GroupStatusState groupStatusState;
     //transient private final GroupInfoState groupInfoState;
 
@@ -27,8 +54,12 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     //////////////////////////////////
     // Constructor
-    public JobGroupImpl() throws RemoteException {
+    public JobGroupImpl(int coins,String name, String owner) throws RemoteException {
         super();
+        this.coins = coins;
+        this.id = nGroups++;
+        this.name = name;
+        this.owner = owner;
         this.subjectState = new State("","");
     }
 
@@ -62,6 +93,8 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         return this.subjectState;
     }
 
+
+
     @Override
     public void setState(State s) throws RemoteException{
         System.out.println("\nSet state ...");
@@ -69,4 +102,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.states.add(s);
         this.notifyAllObservers();
     }
+
+    public void delete() {
+    }
+
+
 }
