@@ -6,10 +6,12 @@ import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 
+import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -116,6 +118,8 @@ public class JobShopClient{
             } catch (RemoteException ex) {
                 Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
                 break;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -191,7 +195,7 @@ public class JobShopClient{
     /*
      *  Show session menu
      */
-    public void menu_session() throws RemoteException {
+    public void menu_session() throws IOException {
         System.out.println("\nSession:");
         System.out.println("[1] - Logout");
 
@@ -265,17 +269,19 @@ public class JobShopClient{
 
     ///Create JobGroup
 
-    private void jobgroup_create() throws RemoteException {
+    private void jobgroup_create() throws IOException {
         if (this.sessionRI != null) {
 
             System.out.print("\nNome do Grupo: ");
             String name = scanner.nextLine();
+            System.out.println("\nPath para Ficheiro:");
+            String path = scanner.nextLine();
+            //String path = "edu/ufp/inf/sd/project/data/la04.txt";
+            this.jobGroupRI = this.sessionRI.createJobGroup(name, 100,path);
 
-            this.jobGroupRI = this.sessionRI.createJobGroup(name, 1000);
-            String path = "edu/ufp/inf/sd/project/data";
             if (jobGroupRI != null) {
                 System.out.println("Criado com sucesso!");
-                WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,path);
+                WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI);
             } else {
                 System.out.println("Erro ao criar grupo?");
             }
@@ -299,15 +305,14 @@ public class JobShopClient{
     /*
      *  Add worker to jobgroup
      */
-    private void jobgroup_add_worker() throws RemoteException {
+    private void jobgroup_add_worker() throws IOException {
         if (this.sessionRI != null) {
 
             System.out.println("ID do Grupo: ");
             String id = scanner.nextLine();
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            String path = "edu/ufp/inf/sd/project/data";
             if(jobGroupRI != null) {
-                new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,path);
+                new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI);
             }
         }
     }

@@ -1,8 +1,10 @@
 package edu.ufp.inf.sd.project.server.jobgroup;
 
 import edu.ufp.inf.sd.project.client.WorkerRI;
+import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.rmi._05_observer.server.State;
 import edu.ufp.inf.sd.rmi._05_observer.server.SubjectImpl;
+
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -16,12 +18,26 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private State subjectState;
     private ArrayList<State> states = new ArrayList<>();
     private ArrayList<WorkerRI> workers = new ArrayList<>();
-
+    private GroupInfoState groupInfoState;
     // JobGroup Info
     transient private int coins;
     private final int id;
     private final String name;
     private final String owner;
+    private final String path;
+
+    //////////////////////////////////
+    // Constructor
+    public JobGroupImpl(int coins,String name, String owner,String path) throws RemoteException {
+        super();
+        this.coins = coins;
+        this.id = nGroups++;
+        this.name = name;
+        this.owner = owner;
+        this.path = path;
+        this.groupInfoState = new GroupInfoState(path);
+        this.subjectState = new State("","");
+    }
 
     public int getCoins() {
         return coins;
@@ -52,16 +68,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     //transient private final HashMap<String, WorkerRI> workers;
 
 
-    //////////////////////////////////
-    // Constructor
-    public JobGroupImpl(int coins,String name, String owner) throws RemoteException {
-        super();
-        this.coins = coins;
-        this.id = nGroups++;
-        this.name = name;
-        this.owner = owner;
-        this.subjectState = new State("","");
-    }
+
 
     public void notifyAllObservers() {
         for (WorkerRI work: workers) {
@@ -76,14 +83,22 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     //////////////////////////////////
     // Methods RI
     @Override
-    public void attach(WorkerRI workerRI) throws RemoteException{
+    public GroupInfoState attach(WorkerRI workerRI) throws RemoteException {
+
         // Already in the list.
         if(this.workers.contains(workerRI))
-            return;
+            return null;
 
-        System.out.println("\nAttached user ...");
-        workers.add(workerRI);
+        // Generate a new Unique ID
+        server_says(" new worker detected. Generating new id ...");
+
+
+        this.workers.add(workerRI);
+
+        return this.groupInfoState;
     }
+
+
 
     @Override
     public void detach(WorkerRI workerRI) throws RemoteException{
@@ -105,4 +120,10 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.notifyAllObservers();
     }
 
+
+
+
+    private void server_says(String msg){
+        System.out.println("[Server]: " + msg);
+    }
 }
