@@ -74,9 +74,6 @@ public class UserSessionImpl extends UnicastRemoteObject implements UserSessionR
     }
 
 
-
-
-
     ///////////////////////////////////////////
     // Get's & Set's
     public User getUser() {
@@ -125,7 +122,7 @@ public class UserSessionImpl extends UnicastRemoteObject implements UserSessionR
         ArrayList<JobGroupImpl> jobGroups = this.db.getJobGroups();
         for (JobGroupImpl jobgroup : jobGroups) {
             if(jobgroup.getId() == id){
-                jobgroup.delete();
+                //jobgroup.delete();
                 this.db.getJobGroups().remove(jobgroup);
             }
         }
