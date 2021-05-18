@@ -5,7 +5,6 @@ import edu.ufp.inf.sd.project.server.session.UserSessionImpl;
 import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.user.User;
 
-
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;

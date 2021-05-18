@@ -1,6 +1,6 @@
 package edu.ufp.inf.sd.project.server.jobgroup;
 
-import edu.ufp.inf.sd.rmi._05_observer.client.ObserverRI;
+import edu.ufp.inf.sd.project.client.WorkerRI;
 import edu.ufp.inf.sd.rmi._05_observer.server.State;
 import edu.ufp.inf.sd.rmi._05_observer.server.SubjectImpl;
 
@@ -15,7 +15,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     private State subjectState;
     private ArrayList<State> states = new ArrayList<>();
-    private ArrayList<ObserverRI> observers = new ArrayList<>();
+    private ArrayList<WorkerRI> workers = new ArrayList<>();
 
     // JobGroup Info
     transient private int coins;
@@ -64,9 +64,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     }
 
     public void notifyAllObservers() {
-        for (ObserverRI obs: observers) {
+        for (WorkerRI work: workers) {
             try {
-                obs.update();
+                work.update();
             }catch (RemoteException ex){
                 Logger.getLogger(SubjectImpl.class.getName());
             }
@@ -76,15 +76,19 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     //////////////////////////////////
     // Methods RI
     @Override
-    public void attach(ObserverRI observerRI) throws RemoteException{
+    public void attach(WorkerRI workerRI) throws RemoteException{
+        // Already in the list.
+        if(this.workers.contains(workerRI))
+            return;
+
         System.out.println("\nAttached user ...");
-        observers.add(observerRI);
+        workers.add(workerRI);
     }
 
     @Override
-    public void detach(ObserverRI observerRI) throws RemoteException{
+    public void detach(WorkerRI workerRI) throws RemoteException{
         System.out.println("\nDetach user ...");
-        observers.remove(observerRI);
+        workers.remove(workerRI);
     }
 
     @Override
@@ -93,8 +97,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         return this.subjectState;
     }
 
-
-
     @Override
     public void setState(State s) throws RemoteException{
         System.out.println("\nSet state ...");
@@ -102,9 +104,5 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.states.add(s);
         this.notifyAllObservers();
     }
-
-    public void delete() {
-    }
-
 
 }

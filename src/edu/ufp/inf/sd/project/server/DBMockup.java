@@ -1,13 +1,10 @@
 package edu.ufp.inf.sd.project.server;
 
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupImpl;
-import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.user.User;
-import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class DBMockup {
 

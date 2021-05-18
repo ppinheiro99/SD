@@ -1,14 +1,14 @@
 package edu.ufp.inf.sd.project.client;
 
-import edu.ufp.inf.sd.project.server.JobShopRI;
 import edu.ufp.inf.sd.project.server.auth.AuthFactoryRI;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
-import java.rmi.RemoteException;
+
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -301,8 +301,6 @@ public class JobShopClient{
      */
     private void jobgroup_add_worker() throws RemoteException {
         if (this.sessionRI != null) {
-
-
 
             System.out.println("ID do Grupo: ");
             String id = scanner.nextLine();
