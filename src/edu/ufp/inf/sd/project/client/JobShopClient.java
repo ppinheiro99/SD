@@ -272,10 +272,10 @@ public class JobShopClient{
             String name = scanner.nextLine();
 
             this.jobGroupRI = this.sessionRI.createJobGroup(name, 1000);
-
+            String path = "edu/ufp/inf/sd/project/data";
             if (jobGroupRI != null) {
                 System.out.println("Criado com sucesso!");
-                //WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), taskGroupRI);
+                WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,path);
             } else {
                 System.out.println("Erro ao criar grupo?");
             }
@@ -307,8 +307,9 @@ public class JobShopClient{
             System.out.println("ID do Grupo: ");
             String id = scanner.nextLine();
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
+            String path = "edu/ufp/inf/sd/project/data";
             if(jobGroupRI != null) {
-                new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI);
+                new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,path);
             }
         }
     }
