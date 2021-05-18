@@ -5,7 +5,6 @@ import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
 
 public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
     private String id;
@@ -27,6 +26,11 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
     public void setId(String id) throws RemoteException {
         this.id = id;
         workerSays("new id received.");
+    }
+
+    @Override
+    public void update() throws RemoteException {
+
     }
 
     private void workerSays(String msg) {

@@ -12,10 +12,10 @@
 
 @REM ======================== CHANGE BELOW ACCORDING YOUR PROJECT and PC SETTINGS ========================
 @REM ==== PC STUFF ====
-@Set USERNAME=jotaSV
+@Set USERNAME=ppinh
 
 @Set WORKDRIVE=C
-@Set JDK=%WORKDRIVE%:\Program Files\Java\jdk-16.0.1
+@Set JDK=C:\Program Files\Java\jdk-16.0.1
 @REM These vars will be used to check the output folder (whereto classes are generated)
 @SET NETBEANS=NetBeans
 @SET INTELLIJ=IntelliJ
@@ -24,7 +24,7 @@
 
 @REM ==== JAVA NAMING STUFF ====
 @Set JAVAPROJ_NAME=SD
-@set JAVAPROJ=C:\Users\jotaSV\Documents\GitHub\SD
+@set JAVAPROJ=%WORKDRIVE%:\\Users\\%USERNAME%\\IdeaProjects\\%JAVAPROJ_NAME%
 @Set PACKAGE=project
 @Set PACKAGE_PREFIX=edu.ufp.inf.sd
 @Set PACKAGE_PREFIX_FOLDERS=edu/ufp/inf/sd

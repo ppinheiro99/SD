@@ -1,11 +1,10 @@
 package edu.ufp.inf.sd.project.server.session;
 
+import edu.ufp.inf.sd.project.server.DBMockup;
+import edu.ufp.inf.sd.project.server.auth.AuthFactoryImpl;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupImpl;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.user.User;
-import edu.ufp.inf.sd.project.server.DBMockup;
-import edu.ufp.inf.sd.project.server.auth.AuthFactoryImpl;
-
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
