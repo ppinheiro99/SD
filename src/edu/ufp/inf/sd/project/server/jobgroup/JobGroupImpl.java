@@ -2,10 +2,12 @@ package edu.ufp.inf.sd.project.server.jobgroup;
 
 import edu.ufp.inf.sd.project.client.WorkerRI;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
+import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.rmi._05_observer.server.State;
 import edu.ufp.inf.sd.rmi._05_observer.server.SubjectImpl;
 
 
+import javax.swing.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
@@ -18,7 +20,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private State subjectState;
     private ArrayList<State> states = new ArrayList<>();
     private ArrayList<WorkerRI> workers = new ArrayList<>();
+    private ArrayList<Integer> makespan = new ArrayList<>();
     private GroupInfoState groupInfoState;
+    private GroupStatusState groupStatusState;
     // JobGroup Info
     transient private int coins;
     private final int id;
@@ -35,8 +39,8 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.name = name;
         this.owner = owner;
         this.path = path;
+        this.groupStatusState = new GroupStatusState("CONTINUE");
         this.groupInfoState = new GroupInfoState(path);
-        this.subjectState = new State("","");
     }
 
     public int getCoins() {
@@ -60,7 +64,11 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         return owner;
     }
 
-// States
+    public ArrayList<Integer> getMakespan() {
+        return makespan;
+    }
+
+    // States
     //transient private GroupStatusState groupStatusState;
     //transient private final GroupInfoState groupInfoState;
 
@@ -68,6 +76,11 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     //transient private final HashMap<String, WorkerRI> workers;
 
 
+
+    public void addMakespan(int make){
+        this.makespan.add(make);
+
+    }
 
 
     public void notifyAllObservers() {
@@ -107,16 +120,15 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     }
 
     @Override
-    public State getState() throws RemoteException {
+    public GroupStatusState getState() throws RemoteException {
         System.out.println("\nGet state ...");
-        return this.subjectState;
+        return this.groupStatusState;
     }
 
     @Override
-    public void setState(State s) throws RemoteException{
+    public void setState(GroupStatusState s) throws RemoteException{
         System.out.println("\nSet state ...");
-        this.subjectState = s;
-        this.states.add(s);
+        this.groupStatusState = s;
         this.notifyAllObservers();
     }
 

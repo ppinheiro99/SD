@@ -24,22 +24,24 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
     private String user;
     protected final JobGroupRI jobGroupRI;
     private GroupInfoState groupInfoState;
+    private JobShopClient jobs;
 
-
-    public WorkerImpl(String user, JobGroupRI jobgroupRI) throws IOException {
+    public WorkerImpl(String user, JobGroupRI jobgroupRI, JobShopClient j) throws IOException {
         super();
         this.user = user;
         this.jobGroupRI = jobgroupRI;
         this.groupStatusState = new GroupStatusState(GroupStatus.CONTINUE);
         this.groupInfoState = this.jobGroupRI.attach(this);
-        processJob(groupInfoState.getPath());
+        this.jobGroupRI.addMakespan(processJob(groupInfoState.getPath()));
+        this.jobs = j;
     }
 
 
 
     @Override
     public void update() throws RemoteException {
-
+         ArrayList<Integer> aux =  jobGroupRI.getMakespan();
+         jobs.print_makespan(aux);
     }
 
     private void workerSays(String msg) {

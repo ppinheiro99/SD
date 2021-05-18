@@ -3,6 +3,7 @@ package edu.ufp.inf.sd.project.client;
 import edu.ufp.inf.sd.project.server.auth.AuthFactoryRI;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.session.UserSessionRI;
+import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 
@@ -240,6 +241,8 @@ public class JobShopClient{
         }
 
 
+
+
     }
 
     /*
@@ -280,8 +283,7 @@ public class JobShopClient{
             this.jobGroupRI = this.sessionRI.createJobGroup(name, 100,path);
 
             if (jobGroupRI != null) {
-                System.out.println("Criado com sucesso!");
-                WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI);
+                WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
             } else {
                 System.out.println("Erro ao criar grupo?");
             }
@@ -312,9 +314,20 @@ public class JobShopClient{
             String id = scanner.nextLine();
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
             if(jobGroupRI != null) {
-                new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI);
+                if(jobGroupRI.getState().getStatus().compareTo("CONTINUE")==0){
+                    System.out.println("Criado com sucesso!");
+                    jobGroupRI.setState(new GroupStatusState("CONTINUE"));
+                    new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                }else {
+                    System.out.println("Erro ao adicionar worker!");
+                }
+
             }
         }
+    }
+
+    public void print_makespan(ArrayList<Integer> getMakespan){
+        System.out.println(getMakespan.toString());
     }
 
 }
