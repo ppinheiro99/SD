@@ -12,19 +12,21 @@
 
 @REM ======================== CHANGE BELOW ACCORDING YOUR PROJECT and PC SETTINGS ========================
 @REM ==== PC STUFF ====
-@Set USERNAME=jotaSV
+@Set USERNAME=Samuel Mota
 
 @Set WORKDRIVE=C
-@Set JDK=C:\Program Files\Java\jdk-16.0.1
+@REM JDK=C:\Users\Samuel Mota\.jdks\openjdk-16.0.1
+@set JDK=C:\Program Files\Java\jdk-16.0.1
+
 @REM These vars will be used to check the output folder (whereto classes are generated)
 @SET NETBEANS=NetBeans
 @SET INTELLIJ=IntelliJ
-@Set CURRENT_IDE=%INTELLIJ%
+@Set CURRENT_IDE=%INTELLIJ
 @REM Set CURRENT_IDE=%NETBEANS%
 
 @REM ==== JAVA NAMING STUFF ====
-@Set JAVAPROJ_NAME=SD
-@set JAVAPROJ=C:\Users\jotaSV\Documents\GitHub\SD
+@Set JAVAPROJ_NAME=SDProject
+@set JAVAPROJ=%WORKDRIVE%:\\SD\\%JAVAPROJ_NAME%
 @Set PACKAGE=project
 @Set PACKAGE_PREFIX=edu.ufp.inf.sd
 @Set PACKAGE_PREFIX_FOLDERS=edu/ufp/inf/sd
@@ -60,7 +62,7 @@
 @Set JAVAPACKAGEPATH=%PACKAGE_PREFIX_FOLDERS%/%PACKAGE%/%SCRIPT_ROLE%
 @Set JAVASCRIPTSPATH=%PACKAGE_PREFIX_FOLDERS%/%PACKAGE%/runscripts_rmi
 @REM Set JAVASECURITYPATH=%PACKAGE_PREFIX_FOLDERS%/%PACKAGE%/securitypolicies
-@Set JAVASECURITYPATH=edu\\ufp\\inf\\sd\\%PACKAGE%\\securitypolicies
+@Set JAVASECURITYPATH=edu\\ufp\\inf\\sd\\rmi\\%PACKAGE%\\securitypolicies
 @Set SERVICE_NAME=%SERVICE_PREFIX%Service
 @Set SERVICE_URL=rmi://%REGISTRY_HOST%:%REGISTRY_PORT%/%SERVICE_NAME%
 

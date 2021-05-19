@@ -181,6 +181,10 @@ public class JobShopClient{
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
+        //depois de logado cria a sessão
+        /**
+         * verfifcare se ja esta logado com o mesmo user
+         */
         sessionRI = authRI.login(username, password);
 
         if(sessionRI != null){
