@@ -65,6 +65,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 if(this.coins > 10){
                     //Enviamos o job e ele executa
                     //Falta adicionar ao saldo do user!!!!!
+                    this.coins--;
                     workerRI.receiveJob(this.groupInfoState);
                 }else {
                     ///Entra aqui assim que as coins forem 10 , verificamos quem tem a melhor solução
@@ -82,7 +83,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     }
 
     public void receiveResults(String id , Integer makespan) {
-        server_says("Getting the result");
+        server_says("Getting the result from " + id);
         ///Se o nosso worker estiver associado ao jobgroup
         if(this.workers.containsKey(id)){
             ///Atualizamos o nosso hashmap de resultados(makespan)
@@ -122,12 +123,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-    // States
-    //transient private GroupStatusState groupStatusState;
-    //transient private final GroupInfoState groupInfoState;
 
-    // DB
-    //transient private final HashMap<String, WorkerRI> workers;
 
 
 
@@ -137,29 +133,42 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
         if(getCoins() > 10){
             //Enviamos o job e ele executa
+            this.coins--;
             //Falta adicionar ao saldo do user!!!!!
+
             this.workers.get(workerID).receiveJob(this.groupInfoState);
+            this.workers.get(workerID).receiveCoins(1);
 
         }else {
             ///Entra aqui assim que as coins forem 10 , verificamos quem tem a melhor solução
-            server_says("ENTREI DIRETO NO VERIFY WINNER");
+
             verify_winner();
             //Falta a parte de meter o saldo ao vencedor
         }
 
     }
-    public void verify_winner(){
+    public void verify_winner() throws IOException {
         ///Começamos a verificar pela primeira posiçao
-        int aux = this.makespan.get(0);
+        int aux = 0;
         String winner="";
         //For each em que verificamos se o valor atual do ciclo é menor que o que temos guardado, caso seja , substituimos
-        for (Map.Entry<String, Integer> auxid : this.makespan.entrySet()
-             ) {
-            if(this.makespan.get(auxid) < aux){
-                aux = this.makespan.get(auxid);
-                winner = auxid.getKey();
+
+        for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
+            String key = entry.getKey();
+            Integer value = entry.getValue();
+            if(aux == 0){
+                aux = value;
+                winner = key;
+
+            }
+            if(value < aux){
+
+                aux = value;
+                winner = key;
+
             }
         }
+
 
         ///Depois de encontrado a melhor soluçao:
 
@@ -167,9 +176,18 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             this.groupStatusState.setStatus("MATCH_FOUND");
         //Enviamos notificaçao a todos os workers da solução
         notifyAllObservers("Nome do utilizador:" + winner + "Makespan:" + aux + "\n");
-        //Fazemos detach de todos os workers
 
-        System.out.println("Nome do utilizador:" + winner + "Makespan:" + aux + "\n");
+        this.workers.get(winner).receiveCoins(10);
+        System.out.println("Winner foi:" + winner + "Makespan:" + aux + "\n");
+        //Fazemos detach de todos os workers
+        this.workers.forEach((id, workerRI) -> {
+            try {
+               this.detach(workerRI);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
     }
 
 

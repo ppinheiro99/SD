@@ -29,9 +29,10 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         this.user = user;
         this.jobGroupRI = jobgroupRI;
         this.groupInfoState = this.jobGroupRI.attach(this);
+        this.jobs = j;
         checkGroupStatus();
-        //this.jobGroupRI.addMakespan(processJob(groupInfoState.getPath()),user);
-        //this.jobs = j;
+
+
     }
 
 
@@ -52,6 +53,13 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
     public void receiveJob(GroupInfoState groupInfoState) throws IOException {
         //Recebemos o nosso job a desempenhar , executamos e enviamos  o resultado para o jobgroup
         Integer makespan = processJob(groupInfoState.getPath());
+        jobGroupRI.receiveResults(this.id,makespan);
+
+    }
+
+    public void receiveCoins(Integer coins) throws IOException {
+       //Recebemos as coins e mandamos para o nosso user
+        this.jobs.getCoinsPayment(coins);
 
     }
     private void workerSays(String msg) {

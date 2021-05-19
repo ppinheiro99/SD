@@ -13,4 +13,5 @@ public interface WorkerRI extends Remote {
     public void receiveJob(GroupInfoState groupInfoState) throws IOException;
 
     public void setId(String id) throws RemoteException;
+    public void receiveCoins(Integer coins) throws IOException;
 }
