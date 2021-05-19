@@ -280,7 +280,7 @@ public class JobShopClient{
             System.out.println("\nPath para Ficheiro:");
             String path = scanner.nextLine();
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
-            this.jobGroupRI = this.sessionRI.createJobGroup(name, 100,path);
+            this.jobGroupRI = this.sessionRI.createJobGroup(name, 12,path);
 
             if (jobGroupRI != null) {
                 WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
@@ -317,7 +317,16 @@ public class JobShopClient{
                 if(jobGroupRI.getState().getStatus().compareTo("CONTINUE")==0){
                     System.out.println("Criado com sucesso!");
                     jobGroupRI.setState(new GroupStatusState("CONTINUE"));
-                    new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                    ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
+                    if(jobGroupRI.getCoins() > 10){
+                        new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                        jobGroupRI.setCoins(jobGroupRI.getCoins()-1);
+                    }else if (jobGroupRI.getCoins() == 10){
+                        //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
+                            jobGroupRI.verify_winner();
+
+                    }
+
                 }else {
                     System.out.println("Erro ao adicionar worker!");
                 }
@@ -326,8 +335,11 @@ public class JobShopClient{
         }
     }
 
-    public void print_makespan(ArrayList<Integer> getMakespan){
-        System.out.println(getMakespan.toString());
+    public void print_makespan(String nome,  int makespan) throws RemoteException {
+        System.out.println("Workers:" + nome );
+
+        System.out.println("\nMakespan");
+        System.out.println(makespan);
     }
 
 }

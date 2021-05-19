@@ -32,16 +32,22 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         this.jobGroupRI = jobgroupRI;
         this.groupStatusState = new GroupStatusState(GroupStatus.CONTINUE);
         this.groupInfoState = this.jobGroupRI.attach(this);
-        this.jobGroupRI.addMakespan(processJob(groupInfoState.getPath()));
+
+        this.jobGroupRI.addMakespan(processJob(groupInfoState.getPath()),user);
         this.jobs = j;
     }
 
 
+    public String getUser() {
+        return user;
+    }
 
     @Override
     public void update() throws RemoteException {
-         ArrayList<Integer> aux =  jobGroupRI.getMakespan();
-         jobs.print_makespan(aux);
+        Integer aux =  jobGroupRI.getSolucao();
+         String w = jobGroupRI.getNome();
+
+         jobs.print_makespan(w,aux);
     }
 
     private void workerSays(String msg) {

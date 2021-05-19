@@ -6,12 +6,14 @@ public class GroupInfoState implements Serializable {
 
 
     private final String path;
+    private final Integer coins;
 
 
     //////////////////////////////////
     // Constructor
-    public GroupInfoState(String path) {
+    public GroupInfoState(String path,Integer coins) {
         this.path = path;
+        this.coins = coins;
     }
 
     //////////////////////////////////

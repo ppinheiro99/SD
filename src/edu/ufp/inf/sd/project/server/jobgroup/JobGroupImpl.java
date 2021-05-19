@@ -7,7 +7,6 @@ import edu.ufp.inf.sd.rmi._05_observer.server.State;
 import edu.ufp.inf.sd.rmi._05_observer.server.SubjectImpl;
 
 
-import javax.swing.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
@@ -29,6 +28,8 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private final String name;
     private final String owner;
     private final String path;
+    private static String nome ;
+    private static Integer solucao ;
 
     //////////////////////////////////
     // Constructor
@@ -40,7 +41,14 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.owner = owner;
         this.path = path;
         this.groupStatusState = new GroupStatusState("CONTINUE");
-        this.groupInfoState = new GroupInfoState(path);
+        this.groupInfoState = new GroupInfoState(path,coins);
+
+        this.nome = "";
+        this.solucao = 999999999;
+    }
+
+    public ArrayList<WorkerRI> getWorkers() {
+        return workers;
     }
 
     public int getCoins() {
@@ -48,11 +56,19 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     }
 
     public void setCoins(int coins) {
+
         this.coins = coins;
     }
 
+    public  String getNome() {
+        return nome;
+    }
 
-     public int getId() {
+    public int getSolucao() {
+        return solucao;
+    }
+
+    public int getId() {
         return id;
     }
 
@@ -77,9 +93,17 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-    public void addMakespan(int make){
+    public void addMakespan(int make, String nick){
+        if(this.solucao > make ){
+            this.solucao = make;
+            this.nome = nick;
+        }
         this.makespan.add(make);
 
+    }
+
+    public void verify_winner(){
+        System.out.println("Nome do utilizador:" + this.nome + "Makespan:" + this.solucao + "\n");
     }
 
 

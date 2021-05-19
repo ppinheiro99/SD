@@ -5,4 +5,5 @@ import java.rmi.RemoteException;
 
 public interface WorkerRI extends Remote {
     public void update() throws RemoteException;
+    public String getUser() throws RemoteException;
 }

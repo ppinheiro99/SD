@@ -20,8 +20,14 @@ public interface JobGroupRI extends Remote {
 
     public int getId() throws RemoteException;
 
+    public int getCoins() throws RemoteException;
+    public void setCoins(int coins) throws RemoteException;
     public ArrayList<Integer> getMakespan() throws RemoteException;
+    public int getSolucao() throws RemoteException;
+    public void verify_winner() throws RemoteException;
 
-    public void addMakespan(int make) throws RemoteException;
+    public String getNome() throws RemoteException;
+    public void addMakespan(int make, String nick) throws RemoteException;
+    public ArrayList<WorkerRI> getWorkers() throws RemoteException;
 
 }
