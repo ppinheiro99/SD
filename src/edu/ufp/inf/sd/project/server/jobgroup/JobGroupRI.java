@@ -5,6 +5,7 @@ import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.rmi._05_observer.server.State;
 
+import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -20,8 +21,15 @@ public interface JobGroupRI extends Remote {
 
     public int getId() throws RemoteException;
 
-    public ArrayList<Integer> getMakespan() throws RemoteException;
+    public int getCoins() throws RemoteException;
+    public void setCoins(int coins) throws RemoteException;
 
-    public void addMakespan(int make) throws RemoteException;
+
+    public void verify_winner() throws RemoteException;
+
+    public void askForJob(String workerID) throws RemoteException, IOException;
+
+
+    public void SendJobs() throws RemoteException;
 
 }

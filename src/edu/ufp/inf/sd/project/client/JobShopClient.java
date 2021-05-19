@@ -211,7 +211,9 @@ public class JobShopClient{
         System.out.println("Group:");
         System.out.println("[3] - Create Group and attach worker.");
         System.out.println("[4] - List existing groups.");
-        System.out.println("[5] - Attach worker to group.");
+        System.out.println("[5] - Pause existing group.");
+        System.out.println("[6] - Attach worker to group.");
+        System.out.println("[7] - Delete existing group.");
         System.out.println();
 
         String option = scanner.nextLine();
@@ -238,10 +240,18 @@ public class JobShopClient{
         if (option.equals("4"))
             jobgroup_list();
 
+        // Pause Job Group
+        if (option.equals("5")) {
+            pause_job_group();
+        }
 
         // Add worker to group
-        if (option.equals("5")) {
+        if (option.equals("6")) {
             jobgroup_add_worker();
+        }
+        // Delete job group
+        if (option.equals("7")) {
+            delete_jobgroup();
         }
 
 
@@ -284,10 +294,16 @@ public class JobShopClient{
             System.out.println("\nPath para Ficheiro:");
             String path = scanner.nextLine();
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
-            this.jobGroupRI = this.sessionRI.createJobGroup(name, 100,path);
+            this.jobGroupRI = this.sessionRI.createJobGroup(name, 12,path);
 
             if (jobGroupRI != null) {
-                WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                if(jobGroupRI.getCoins() == 10){
+                    WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                    jobGroupRI.verify_winner();
+                }else{
+                    WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                }
+
             } else {
                 System.out.println("Erro ao criar grupo?");
             }
@@ -296,7 +312,7 @@ public class JobShopClient{
 
 
     /*
-     *  Ask and list all task groups
+     *  Ask and pause one job group
      */
     private void jobgroup_list() throws RemoteException {
         if (this.sessionRI != null) {
@@ -305,6 +321,26 @@ public class JobShopClient{
             System.out.println("\n\t List of Groups:");
             for (String name : groups)
                 System.out.println(name);
+        }
+    }
+
+    /*
+     *  Ask and list all job groups
+     */
+    private void pause_job_group() throws RemoteException {
+        if (this.sessionRI != null) {
+            System.out.print("\nID do Grupo: ");
+            String id = scanner.nextLine();
+            ArrayList<String> groups = this.sessionRI.listJobGroups();
+            System.out.println("\n\t List of Groups:");
+            for (String name : groups)
+                System.out.println(name);
+
+            JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
+            if(jobGroupRI!=null){
+                GroupStatusState s = new GroupStatusState("PAUSE");
+                jobGroupRI.setState(s);
+            }
         }
     }
 
@@ -318,20 +354,41 @@ public class JobShopClient{
             String id = scanner.nextLine();
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
             if(jobGroupRI != null) {
-                if(jobGroupRI.getState().getStatus().compareTo("CONTINUE")==0){
                     System.out.println("Criado com sucesso!");
-                    jobGroupRI.setState(new GroupStatusState("CONTINUE"));
-                    new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                    ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
+
+                    ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
+
+                    if(jobGroupRI.getCoins() > 10){
+                        new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+
+                    }else if (jobGroupRI.getCoins() == 10){
+                        //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
+                            jobGroupRI.verify_winner();
+                    }
+
                 }else {
                     System.out.println("Erro ao adicionar worker!");
                 }
 
-            }
+
         }
     }
 
-    public void print_makespan(ArrayList<Integer> getMakespan){
-        System.out.println(getMakespan.toString());
+    public void delete_jobgroup() throws RemoteException {
+        if (this.sessionRI != null) {
+
+            System.out.print("\nNome do Grupo: ");
+            String name = scanner.nextLine();
+            //String path = "edu/ufp/inf/sd/project/data/la04.txt";
+            this.sessionRI.deleteJobGroup(Integer.parseInt(name));
+            System.out.println("JobGroup apagado com sucesso!");
+
+        }
+    }
+
+    public void print_msg(String msg) throws RemoteException {
+        System.out.println(msg);
     }
 
 }
