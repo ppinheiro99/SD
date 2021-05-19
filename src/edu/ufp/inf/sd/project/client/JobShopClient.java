@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class JobShopClient{
+public class        JobShopClient{
 
     private SetupContextRMI contextRMI;
     private JobGroupRI jobGroupRI;
