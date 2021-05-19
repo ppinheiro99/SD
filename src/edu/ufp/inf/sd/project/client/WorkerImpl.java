@@ -3,38 +3,35 @@ package edu.ufp.inf.sd.project.client;
 
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
-import edu.ufp.inf.sd.project.server.states.GroupStatus;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.util.tabusearch.TabuSearchJSSP;
 
 import java.io.IOException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
 
-    private final GroupStatusState groupStatusState;
 
+    private String id;
     private String user;
     protected final JobGroupRI jobGroupRI;
     private GroupInfoState groupInfoState;
+    private GroupStatusState groupStatus;
     private JobShopClient jobs;
 
     public WorkerImpl(String user, JobGroupRI jobgroupRI, JobShopClient j) throws IOException {
         super();
+        this.id = "";
         this.user = user;
         this.jobGroupRI = jobgroupRI;
-        this.groupStatusState = new GroupStatusState(GroupStatus.CONTINUE);
         this.groupInfoState = this.jobGroupRI.attach(this);
-
-        this.jobGroupRI.addMakespan(processJob(groupInfoState.getPath()),user);
-        this.jobs = j;
+        checkGroupStatus();
+        //this.jobGroupRI.addMakespan(processJob(groupInfoState.getPath()),user);
+        //this.jobs = j;
     }
 
 
@@ -43,13 +40,20 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
     }
 
     @Override
-    public void update() throws RemoteException {
-        Integer aux =  jobGroupRI.getSolucao();
-         String w = jobGroupRI.getNome();
-
-         jobs.print_makespan(w,aux);
+    public void setId(String id) throws RemoteException {
+        this.id = id;
     }
 
+    @Override
+    public void update(String msg) throws RemoteException {
+        jobs.print_msg(msg);
+    }
+
+    public void receiveJob(GroupInfoState groupInfoState) throws IOException {
+        //Recebemos o nosso job a desempenhar , executamos e enviamos  o resultado para o jobgroup
+        Integer makespan = processJob(groupInfoState.getPath());
+
+    }
     private void workerSays(String msg) {
         System.out.println( msg);
     }
@@ -64,7 +68,21 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         int makespan = ts.run();
 
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "[TS] Makespan for {0} = {1}", new Object[]{jsspInstancePath,String.valueOf(makespan)});
-        System.out.println("grande makespan" + makespan) ;
+        workerSays("Job Done! Makespan was :" + makespan);
         return makespan;
+    }
+
+    /*
+     * Check JobGroup Status (PAUSE, CONTINUE, MATCH_FOUND).
+     */
+    private void checkGroupStatus() throws IOException {
+
+        // Get status from server.
+        this.groupStatus = this.jobGroupRI.getState();
+
+        workerSays("The Status of JobGroup is: " + this.groupStatus.getStatus());
+        if(this.groupStatus.getStatus().compareTo("CONTINUE")==0)
+            this.jobGroupRI.askForJob(this.id);
+
     }
 }
