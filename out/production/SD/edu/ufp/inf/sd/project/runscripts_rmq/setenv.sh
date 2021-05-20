@@ -12,12 +12,12 @@ export SCRIPT_ROLE=$1
 
 #@REM ======================== CHANGE BELOW ACCORDING YOUR PROJECT and PC SETTINGS ========================
 #@REM ==== PC STUFF ====
-export JDK=/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home
+export JDK=C:\Program Files\Java\jdk-16.0.1
 export NETBEANS=NetBeans
 export INTELLIJ=IntelliJ
 export CURRENT_IDE=${INTELLIJ}
 #export CURRENT_IDE=¢{NETBEANS}
-export USERNAME=ivoaspereira
+export USERNAME=jotaSV
 
 #@REM ==== JAVA NAMING STUFF ====
 export JAVAPROJ_NAME=SD
