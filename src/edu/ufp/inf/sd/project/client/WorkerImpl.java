@@ -1,6 +1,6 @@
 package edu.ufp.inf.sd.project.client;
 
-
+import edu.ufp.inf.sd.project.consumer.Consumer;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
@@ -22,6 +22,7 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
     private GroupInfoState groupInfoState;
     private GroupStatusState groupStatus;
     private JobShopClient jobs;
+    private Consumer c = new Consumer();
 
     public WorkerImpl(String user, JobGroupRI jobgroupRI, JobShopClient j) throws IOException {
         super();
@@ -31,9 +32,19 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         this.jobs = j;
         this.groupInfoState = this.jobGroupRI.attach(this);
 
+        try {
+            rabbito();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
+    }
+    public static void main(String[] args){}
 
+    private void rabbito() throws Exception {
+        String a[]={};
+        c.main(a);
     }
 
 
