@@ -28,9 +28,10 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         this.id = "";
         this.user = user;
         this.jobGroupRI = jobgroupRI;
-        this.groupInfoState = this.jobGroupRI.attach(this);
         this.jobs = j;
-        checkGroupStatus();
+        this.groupInfoState = this.jobGroupRI.attach(this);
+
+
 
 
     }

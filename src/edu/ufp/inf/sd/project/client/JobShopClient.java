@@ -316,7 +316,7 @@ public class JobShopClient{
             String name = scanner.nextLine();
             System.out.println("\nPath para Ficheiro:");
             String path = scanner.nextLine();
-            System.out.println("\nPath para Ficheiro:");
+            System.out.println("\nPlafon para o JobGroup:");
             String plafon = scanner.nextLine();
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
             ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
