@@ -91,7 +91,12 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
         }
 
-        server_says("Jobs Sent");
+        server_says("Result Received");
+        try {
+            verify_winner();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -152,10 +157,15 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         int aux = 0;
         String winner="";
         //For each em que verificamos se o valor atual do ciclo é menor que o que temos guardado, caso seja , substituimos
-
+        if (this.coins > 10){
+            return ;
+        }
         for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
             String key = entry.getKey();
             Integer value = entry.getValue();
+            //Cada worker recebe 1 pelo trabalho
+
+            this.workers.get(entry.getKey()).receiveCoins(1);
             if(aux == 0){
                 aux = value;
                 winner = key;
@@ -176,7 +186,8 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             this.groupStatusState.setStatus("MATCH_FOUND");
         //Enviamos notificaçao a todos os workers da solução
         notifyAllObservers("Nome do utilizador:" + winner + "Makespan:" + aux + "\n");
-
+        //plafon a 0
+        this.coins = 0;
         this.workers.get(winner).receiveCoins(10);
         System.out.println("Winner foi:" + winner + "Makespan:" + aux + "\n");
         //Fazemos detach de todos os workers
@@ -209,24 +220,40 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     public GroupInfoState attach(WorkerRI workerRI) throws RemoteException {
 
         // Already in the list.
-        if(this.workers.containsValue(workerRI)){
-            server_says(" Worker already on the list!");
+        if(this.workers.containsValue(workerRI) || this.groupStatusState.getStatus().compareTo("PAUSE")==0 || this.groupStatusState.getStatus().compareTo("MATCH_FOUND") == 0){
+            server_says(" Worker already on the list! or state is paused or match_found!");
+            return null;
+        }
+        ///Se for >10 podemos dar attach , senao temos q verificar o winner
+        if(this.coins > 10){
+            // Generate a new Unique ID
+            server_says(" new worker detected. Generating new id ...");
+
+            String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+            while(this.workers.containsKey(newID))
+                newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+
+            server_says("worker id: " + newID);
+
+            this.workers.put(newID, workerRI);
+            workerRI.setId(newID);
+            try {
+                this.workers.get(newID).receiveJob(this.groupInfoState);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return this.groupInfoState;
+        }else {
+            try {
+                verify_winner();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return null;
         }
 
 
-        // Generate a new Unique ID
-        server_says(" new worker detected. Generating new id ...");
 
-        String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
-        while(this.workers.containsKey(newID))
-            newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
-
-        server_says("worker id: " + newID);
-
-        this.workers.put(newID, workerRI);
-        workerRI.setId(newID);
-        return this.groupInfoState;
 
 
     }
