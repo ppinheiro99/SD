@@ -316,7 +316,7 @@ public class JobShopClient{
             String name = scanner.nextLine();
             System.out.println("\nPath para Ficheiro:");
             String path = scanner.nextLine();
-            System.out.println("\nPlafon para JobGroup:");
+            System.out.println("\nPath para Ficheiro:");
             String plafon = scanner.nextLine();
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
             ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
@@ -325,8 +325,9 @@ public class JobShopClient{
                 //tira ao saldo o plafon para o jobgroup
                 this.getCoinsPayment(-Integer.parseInt(plafon));
                 if (jobGroupRI != null) {
-                    if(jobGroupRI.getCoins() == 11){
+                    if(jobGroupRI.getCoins() == 10){
                         WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                        jobGroupRI.verify_winner();
                     }else{
                         WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
                     }
