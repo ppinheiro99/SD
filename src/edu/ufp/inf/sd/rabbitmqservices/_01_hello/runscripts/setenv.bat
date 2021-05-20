@@ -12,10 +12,10 @@
 
 @REM ======================== CHANGE BELOW ACCORDING YOUR PROJECT and PC SETTINGS ========================
 @REM ==== PC STUFF ====
-@Set USERNAME=ppinh
+@Set USERNAME=Samuel Mota
 
 @Set WORKDRIVE=C
-@Set JDK=C:\Program Files\Java\jdk-15.0.2
+@Set JDK=C:/Program Files/Java/openjdk-16.0.1
 @Set NETBEANS=NetBeans
 @Set INTELLIJ=IntelliJ
 @Set CURRENT_IDE=%INTELLIJ%
@@ -23,8 +23,8 @@
 
 
 @REM ==== JAVA NAMING STUFF ====
-@Set JAVAPROJ_NAME=SD
-@set JAVAPROJ=%WORKDRIVE%:\\Users\\%USERNAME%\\IdeaProjects\\%JAVAPROJ_NAME%
+@Set JAVAPROJ_NAME=SDProject
+@set JAVAPROJ=C:/SD/SDProject
 @Set RABBITMQ_SERVICES_FOLDER=edu/ufp/inf/sd/rabbitmqservices
 @Set RABBITMQ_SERVICES_PACKAGE=edu.ufp.inf.sd.rabbitmqservices
 @Set PACKAGE=_01_hello
