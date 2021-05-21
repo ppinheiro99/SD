@@ -25,3 +25,4 @@ java -cp %CLASSPATH% -Djava.security.policy=%CLIENT_SECURITY_POLICY% -Djava.rmi.
 
 @cd %ABSPATH2SRC%\%JAVASCRIPTSPATH%
 
+

@@ -15,7 +15,7 @@
 @Set USERNAME=ppinh
 
 @Set WORKDRIVE=C
-@Set JDK=C:\Program Files\Java\jdk-16.0.1
+@Set JDK=%WORKDRIVE%:\Programas\Java\jdk1.8.0_60
 @Set NETBEANS=NetBeans
 @Set INTELLIJ=IntelliJ
 @Set CURRENT_IDE=%INTELLIJ%
@@ -30,7 +30,7 @@
 @Set QUEUE_NAME_PREFIX=project
 @Set EXCHANGE_NAME_PREFIX=NA
 @Set PRODUCER_CLASS_PREFIX=Producer
-@Set CONSUMER_CLASS_PREFIX=Consumer
+@Set CONSUMER_CLASS_PREFIX=WorkerImpl
 
 @REM ==== NETWORK STUFF ====
 @Set BROKER_HOST=localhost
