@@ -12,5 +12,6 @@
     <orderEntry type="library" name="commons-lang3-3.10" level="project" />
     <orderEntry type="library" name="com.sun.activation:javax.activation:1.2.0" level="project" />
     <orderEntry type="library" name="javax.mail-1.6.2" level="project" />
+
   </component>
 </module>

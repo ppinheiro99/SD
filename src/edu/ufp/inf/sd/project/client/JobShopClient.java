@@ -15,6 +15,7 @@ import java.rmi.registry.Registry;
 import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -121,6 +122,8 @@ public class JobShopClient{
                 break;
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (TimeoutException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -198,7 +201,7 @@ public class JobShopClient{
     /*
      *  Show session menu
      */
-    public void menu_session() throws IOException {
+    public void menu_session() throws IOException, TimeoutException {
         System.out.println("\nSession:");
         System.out.println("[1] - Logout");
 
@@ -310,7 +313,7 @@ public class JobShopClient{
 
     ///Create JobGroup
 
-    private void jobgroup_create() throws IOException {
+    private void jobgroup_create() throws IOException, TimeoutException {
         if (this.sessionRI != null) {
             System.out.print("\nNome do Grupo: ");
             String name = scanner.nextLine();
@@ -318,26 +321,31 @@ public class JobShopClient{
             String path = scanner.nextLine();
             System.out.println("\nPlafon para o JobGroup:");
             String plafon = scanner.nextLine();
-            //String path = "edu/ufp/inf/sd/project/data/la04.txt";
-            ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
-            if(Integer.parseInt(plafon) < sessionRI.showCoins()){
-                this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),path);
-                //tira ao saldo o plafon para o jobgroup
-                this.getCoinsPayment(-Integer.parseInt(plafon));
-                if (jobGroupRI != null) {
-                    if(jobGroupRI.getCoins() == 10){
-                        WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
-                        jobGroupRI.verify_winner();
-                    }else{
-                        WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
-                    }
+            System.out.println("\nEstrategia para o JobGroup (ts ou ga):");
+            String strat = scanner.nextLine();
+            if(strat.compareTo("ts")==0 || strat.compareTo("ga")==0){
+                //String path = "edu/ufp/inf/sd/project/data/la04.txt";
+                ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
+                if(Integer.parseInt(plafon) < sessionRI.showCoins()){
+                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),path,strat);
+                    //tira ao saldo o plafon para o jobgroup
+                    this.getCoinsPayment(-Integer.parseInt(plafon));
+                    if (jobGroupRI != null) {
+                        if(jobGroupRI.getCoins() == 10){
+                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                            jobGroupRI.verify_winner();
+                        }else{
+                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                        }
 
-                } else {
-                    System.out.println("Erro ao criar grupo?");
+                    } else {
+                        System.out.println("Erro ao criar grupo?");
+                    }
+                }else {
+                    System.out.println("Plafon é superior ao saldo!");
                 }
-            }else {
-                System.out.println("Plafon é superior ao saldo!");
             }
+
 
         }
     }
@@ -379,7 +387,7 @@ public class JobShopClient{
     /*
      *  Add worker to jobgroup
      */
-    private void jobgroup_add_worker() throws IOException {
+    private void jobgroup_add_worker() throws IOException, TimeoutException {
         if (this.sessionRI != null) {
 
             System.out.println("ID do Grupo: ");

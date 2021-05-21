@@ -20,7 +20,7 @@ public interface JobGroupRI extends Remote {
     public GroupStatusState getState() throws RemoteException;
 
     public int getId() throws RemoteException;
-
+    public String getName() throws RemoteException;
     public int getCoins() throws RemoteException;
     public void setCoins(int coins) throws RemoteException;
     public void receiveResults(String id , Integer makespan) throws RemoteException;
