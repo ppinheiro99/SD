@@ -12,7 +12,7 @@
 
 @REM ======================== CHANGE BELOW ACCORDING YOUR PROJECT and PC SETTINGS ========================
 @REM ==== PC STUFF ====
-@Set USERNAME=jotaSV
+@Set USERNAME=ppinh
 
 @Set WORKDRIVE=C
 @Set JDK=C:\Program Files\Java\jdk-16.0.1
@@ -24,7 +24,7 @@
 
 @REM ==== JAVA NAMING STUFF ====
 @Set JAVAPROJ_NAME=SD
-@set JAVAPROJ=%WORKDRIVE%:\\Users\\%USERNAME%\\Documents\\Github\\%JAVAPROJ_NAME%
+@set JAVAPROJ=%WORKDRIVE%:\\Users\\%USERNAME%\\IdeaProjects\\%JAVAPROJ_NAME%
 @Set PACKAGE=project
 @Set PACKAGE_PREFIX=edu.ufp.inf.sd
 @Set PACKAGE_PREFIX_FOLDERS=edu/ufp/inf/sd

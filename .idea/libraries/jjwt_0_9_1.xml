@@ -1,7 +1,7 @@
 <component name="libraryTable">
-  <library name="commons-lang3-3.10">
+  <library name="jjwt-0.9.1">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/bin/commons-lang3-3.10.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jjwt-0.9.1.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
