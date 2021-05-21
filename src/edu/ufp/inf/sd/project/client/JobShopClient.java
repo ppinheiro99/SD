@@ -12,7 +12,6 @@ import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -320,7 +319,7 @@ public class JobShopClient{
             String plafon = scanner.nextLine();
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
             ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
-            if(Integer.parseInt(plafon) < sessionRI.showCoins()){
+            if(Integer.parseInt(plafon) < sessionRI.showCoins()){ /////////////////////////////////////////////////////////////////
                 this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),path);
                 //tira ao saldo o plafon para o jobgroup
                 this.getCoinsPayment(-Integer.parseInt(plafon));

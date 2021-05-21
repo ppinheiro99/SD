@@ -40,7 +40,7 @@ public class Consumer {
 
     //private final static String QUEUE_NAME = "helloqueue";
 
-    public static void main(String[] argv) throws Exception {
+    public void main(String[] argv) throws Exception {
         try {
             /* Open a connection and a channel, and declare the queue from which to consume.
             Declare the queue here, as well, because we might start the client before the publisher. */
