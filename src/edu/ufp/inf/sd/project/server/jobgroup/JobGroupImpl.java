@@ -1,8 +1,14 @@
 package edu.ufp.inf.sd.project.server.jobgroup;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DeliverCallback;
 import edu.ufp.inf.sd.project.client.WorkerRI;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
+import edu.ufp.inf.sd.project.util.geneticalgorithm.CrossoverStrategies;
+import edu.ufp.inf.sd.project.util.geneticalgorithm.GeneticAlgorithmJSSP;
 import edu.ufp.inf.sd.rmi._05_observer.server.State;
 import edu.ufp.inf.sd.rmi._05_observer.server.SubjectImpl;
 
@@ -14,12 +20,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
+    private static final String QUEUE_NAME = "jssp_ga";
     transient private static int nGroups = 0;
-
 
 
 
@@ -33,26 +41,111 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private final String name;
     private final String owner;
     private final String path;
+    private final String strat;
+    private String exchangeName;
+
 
 
 
     //////////////////////////////////
     // Constructor
-    public JobGroupImpl(int coins,String name, String owner,String path) throws RemoteException {
+    public JobGroupImpl(int coins,String name, String owner,String path,String strat) throws RemoteException {
         super();
         this.name = name;
         this.coins = coins;
         this.owner = owner;
         this.path = path;
         this.id = ++nGroups;
+        this.strat = strat;
         this.makespan = new HashMap<>();
         this.workers = new HashMap<>();
-
+        this.exchangeName = "exchange_" + this.id + "_" + this.name;
         // GROUP STARTING STATUS
         this.groupStatusState = new GroupStatusState("CONTINUE");
-        this.groupInfoState = new GroupInfoState(path);
+        this.groupInfoState = new GroupInfoState(path,this.exchangeName);
 
         SendJobs();
+
+    }
+    public void producer(String id){
+        //Connection connection=null;
+        //Channel channel=null;
+
+        /* Create a connection to the server (abstracts the socket connection,
+           protocol version negotiation and authentication, etc.) */
+        ConnectionFactory factory=new ConnectionFactory();
+        factory.setHost("localhost");
+        factory.setUsername("guest");
+        factory.setPassword("guest");
+        //factory.setPassword("guest4rabbitmq");
+
+        /* try-with-resources\. will close resources automatically in reverse order... avoids finally */
+        try (//Create a channel, which is where most of the API resides
+             Connection connection=factory.newConnection();
+             Channel channel=connection.createChannel()
+        ) {
+            /* We must declare a queue to send to; this is idempotent, i.e.,
+            it will only be created if it doesn't exist already;
+            then we can publish a message to the queue; The message content is a
+            byte array (can encode whatever we need). */
+
+            channel.queueDeclare(id+this.name, false, false, false, null);
+            channel.exchangeDeclare(this.exchangeName, "direct");
+            channel.queueBind(id+this.name, this.exchangeName, id+this.name);
+            //channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+            //Enviar o path
+            String message = path;
+            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
+            System.out.println(" [x] Sent '" + message + "'");
+
+            //Enviar as strats
+
+
+            ///Parte de receber se deus quiser
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String msg = new String(delivery.getBody(), "UTF-8");
+                    System.out.println(" [x] Received '" + msg + "'");
+
+            };
+            channel.basicConsume(id+this.name+"_results", true, deliverCallback, consumerTag -> { });
+
+            //sendMessage(channel,this.path);
+           // Thread.currentThread().sleep(5000);
+            // Change strategy to CrossoverStrategies.TWO
+           // sendMessage(channel, String.valueOf(CrossoverStrategies.TWO.strategy));
+            //Thread.currentThread().sleep(2000);
+            // DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+              //  String message = new String(delivery.getBody(), "UTF-8");
+            //    System.out.println(" [x] Received '" + message + "'");
+
+          //  };
+
+            //channel.basicConsume(QUEUE_NAME + "_results", true, deliverCallback, consumerTag -> { });
+            // Change strategy to CrossoverStrategies.THREE
+          //  sendMessage(channel, String.valueOf(CrossoverStrategies.THREE.strategy));
+         //   Thread.currentThread().sleep(2000);
+
+            // Stop the GA
+            //sendMessage(channel, "stop");
+
+        } catch (IOException | TimeoutException e) {
+            Logger.getLogger(this.name).log(Level.INFO, e.toString());
+        } /* The try-with-resources will close resources automatically in reverse order
+            finally {
+            try {
+                // Lastly, we close the channel and the connection
+                if (channel != null) { channel.close(); }
+                if (connection != null) { connection.close(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } */
+    }
+
+
+    public static void sendMessage(Channel channel, String message,String q) throws IOException {
+        channel.basicPublish("", q, null, message.getBytes("UTF-8"));
+        System.out.println(" [x] Sent '" + message + "'");
     }
 
     public void SendJobs() {
@@ -218,39 +311,72 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     // Methods RI
     @Override
     public GroupInfoState attach(WorkerRI workerRI) throws RemoteException {
-
-        // Already in the list.
-        if(this.workers.containsValue(workerRI) || this.groupStatusState.getStatus().compareTo("PAUSE")==0 || this.groupStatusState.getStatus().compareTo("MATCH_FOUND") == 0){
-            server_says(" Worker already on the list! or state is paused or match_found!");
-            return null;
-        }
-        ///Se for >10 podemos dar attach , senao temos q verificar o winner
-        if(this.coins > 10){
-            // Generate a new Unique ID
-            server_says(" new worker detected. Generating new id ...");
-
-            String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
-            while(this.workers.containsKey(newID))
-                newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
-
-            server_says("worker id: " + newID);
-
-            this.workers.put(newID, workerRI);
-            workerRI.setId(newID);
-            try {
-                this.workers.get(newID).receiveJob(this.groupInfoState);
-            } catch (IOException e) {
-                e.printStackTrace();
+        if(this.strat.compareTo("ts")==0){
+            // Already in the list.
+            if(this.workers.containsValue(workerRI) || this.groupStatusState.getStatus().compareTo("PAUSE")==0 || this.groupStatusState.getStatus().compareTo("MATCH_FOUND") == 0){
+                server_says(" Worker already on the list! or state is paused or match_found!");
+                return null;
             }
-            return this.groupInfoState;
+            ///Se for >10 podemos dar attach , senao temos q verificar o winner
+            if(this.coins > 10){
+                // Generate a new Unique ID
+                server_says(" new worker detected. Generating new id ...");
+
+                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                while(this.workers.containsKey(newID))
+                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+
+                server_says("worker id: " + newID);
+
+                this.workers.put(newID, workerRI);
+                workerRI.setId(newID);
+                try {
+                    this.workers.get(newID).receiveJob(this.groupInfoState);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return this.groupInfoState;
+            }else {
+                try {
+                    verify_winner();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
         }else {
-            try {
-                verify_winner();
-            } catch (IOException e) {
-                e.printStackTrace();
+            // Already in the list.
+            if(this.workers.containsValue(workerRI) || this.groupStatusState.getStatus().compareTo("PAUSE")==0 || this.groupStatusState.getStatus().compareTo("MATCH_FOUND") == 0){
+                server_says(" Worker already on the list! or state is paused or match_found!");
+                return null;
             }
-            return null;
+            ///Se for >10 podemos dar attach , senao temos q verificar o winner
+            if(this.coins > 10){
+                // Generate a new Unique ID
+                server_says(" new worker detected. Generating new id ...");
+
+                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                while(this.workers.containsKey(newID))
+                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+
+                server_says("worker id: " + newID);
+
+                this.workers.put(newID, workerRI);
+                workerRI.setId(newID);
+                //Antes de darmos o trabalho ao worker , temos que abrir o canal de comunicaçao , chamando o producer
+                producer(newID);
+                //this.workers.get(newID).receiveJob(this.groupInfoState);
+                return this.groupInfoState;
+            }else {
+                try {
+                    verify_winner();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
         }
+
 
 
 
