@@ -12,10 +12,10 @@
 
 @REM ======================== CHANGE BELOW ACCORDING YOUR PROJECT and PC SETTINGS ========================
 @REM ==== PC STUFF ====
-@Set USERNAME=rui
+@Set USERNAME=ppinh
 
 @Set WORKDRIVE=C
-@Set JDK=%WORKDRIVE%:\Programas\Java\jdk1.8.0_60
+@Set JDK=C:\Program Files\Java\jdk-16.0.1
 @Set NETBEANS=NetBeans
 @Set INTELLIJ=IntelliJ
 @Set CURRENT_IDE=%INTELLIJ%

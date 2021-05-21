@@ -12,7 +12,6 @@ import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -163,6 +162,7 @@ public class JobShopClient{
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
+
         Boolean success = authRI.registry(username, password);
 
         if(success)
@@ -181,10 +181,7 @@ public class JobShopClient{
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
-        //depois de logado cria a sessão
-        /**
-         * verfifcare se ja esta logado com o mesmo user
-         */
+
         sessionRI = authRI.login(username, password);
 
         if(sessionRI != null){
@@ -207,6 +204,8 @@ public class JobShopClient{
         System.out.println("Users:");
         System.out.println("[2] - List Users");
         System.out.println("[*] - My Username");
+        System.out.println("[c] - My Coins");
+        System.out.println("[a] - Add Coins");
 
         System.out.println("Group:");
         System.out.println("[3] - Create Group and attach worker.");
@@ -214,6 +213,7 @@ public class JobShopClient{
         System.out.println("[5] - Pause existing group.");
         System.out.println("[6] - Attach worker to group.");
         System.out.println("[7] - Delete existing group.");
+        System.out.println("[8] - Continue existing group.");
         System.out.println();
 
         String option = scanner.nextLine();
@@ -226,6 +226,14 @@ public class JobShopClient{
         // List Users
         if (option.equals("2"))
             user_list();
+
+        // My Coins
+        if (option.equals("a"))
+            add_coins();
+
+        // My Coins
+        if (option.equals("c"))
+            System.out.println("\n\t My Coins: " + this.sessionRI.showCoins());
 
         // My Username
         if (option.equals("*"))
@@ -254,9 +262,24 @@ public class JobShopClient{
             delete_jobgroup();
         }
 
+        // Continue job group
+        if (option.equals("8")) {
+            continue_jobgroup();
+        }
 
 
 
+
+    }
+
+
+
+    private void add_coins() throws RemoteException {
+        if (this.sessionRI != null) {
+            System.out.print("\nCoins a adicionar: ");
+            String saldo = scanner.nextLine();
+            this.getCoinsPayment(Integer.parseInt(saldo));
+        }
     }
 
     /*
@@ -288,25 +311,32 @@ public class JobShopClient{
 
     private void jobgroup_create() throws IOException {
         if (this.sessionRI != null) {
-
             System.out.print("\nNome do Grupo: ");
             String name = scanner.nextLine();
             System.out.println("\nPath para Ficheiro:");
             String path = scanner.nextLine();
+            System.out.println("\nPlafon para JobGroup:");
+            String plafon = scanner.nextLine();
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
-            this.jobGroupRI = this.sessionRI.createJobGroup(name, 12,path);
+            ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
+            if(Integer.parseInt(plafon) < sessionRI.showCoins()){ /////////////////////////////////////////////////////////////////
+                this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),path);
+                //tira ao saldo o plafon para o jobgroup
+                this.getCoinsPayment(-Integer.parseInt(plafon));
+                if (jobGroupRI != null) {
+                    if(jobGroupRI.getCoins() == 11){
+                        WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                    }else{
+                        WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                    }
 
-            if (jobGroupRI != null) {
-                if(jobGroupRI.getCoins() == 10){
-                    WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
-                    jobGroupRI.verify_winner();
-                }else{
-                    WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                } else {
+                    System.out.println("Erro ao criar grupo?");
                 }
-
-            } else {
-                System.out.println("Erro ao criar grupo?");
+            }else {
+                System.out.println("Plafon é superior ao saldo!");
             }
+
         }
     }
 
@@ -387,8 +417,31 @@ public class JobShopClient{
         }
     }
 
+    private void continue_jobgroup() throws RemoteException {
+        if (this.sessionRI != null) {
+            System.out.print("\nID do Grupo: ");
+            String id = scanner.nextLine();
+            ArrayList<String> groups = this.sessionRI.listJobGroups();
+            System.out.println("\n\t List of Groups:");
+            for (String name : groups)
+                System.out.println(name);
+
+            JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
+            if(jobGroupRI!=null){
+                GroupStatusState s = new GroupStatusState("CONTINUE");
+                jobGroupRI.setState(s);
+            }
+        }
+    }
+
     public void print_msg(String msg) throws RemoteException {
         System.out.println(msg);
+    }
+
+    public void getCoinsPayment(Integer coins) throws RemoteException {
+        if(this.sessionRI!=null){
+            sessionRI.addCoins(coins);
+        }
     }
 
 }
