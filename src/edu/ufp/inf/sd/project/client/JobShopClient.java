@@ -5,22 +5,28 @@ import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.server.user.User;
+import edu.ufp.inf.sd.project.client.layouts.menucorrect;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 
+import java.awt.*;
 import java.io.IOException;
+import java.lang.module.FindException;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.*;
+
+import static javax.swing.GroupLayout.Alignment.*;
 
 
-public class JobShopClient extends javax.swing.JFrame{
+public class JobShopClient extends javax.swing.JFrame {
 
     private String[] args;
     private SetupContextRMI contextRMI;
@@ -30,7 +36,9 @@ public class JobShopClient extends javax.swing.JFrame{
     private AuthFactoryRI authRI;
     private UserSessionRI sessionRI;
 
-/**Parte Grafica**/
+    /**
+     * Parte Grafica
+     **/
     private javax.swing.JLabel jLabelUserName;
     private javax.swing.JLabel jLabelPassword;
     private javax.swing.JTextField jTextFieldUsername;
@@ -38,7 +46,6 @@ public class JobShopClient extends javax.swing.JFrame{
     private javax.swing.JButton jButtonLogin;
     private javax.swing.JButton jButtonRegistry;
     private javax.swing.JScrollPane jScrollPane1;
-
 
 
     ///////////////////////////////////////////
@@ -49,10 +56,14 @@ public class JobShopClient extends javax.swing.JFrame{
             String registryIP = args[0];
             String registryPort = args[1];
             String serviceName = args[2];
-            this.args=args;
-            this.args[0]=registryIP;
-            this.args[1]=registryPort;
-            this.args[2]=serviceName;
+            this.args = args;
+            this.args[0] = registryIP;
+            this.args[1] = registryPort;
+            this.args[2] = serviceName;
+
+            System.out.println("#################################################################################");
+            System.out.println("###############" + Arrays.toString(this.args) + "###############");
+            System.out.println("#################################################################################");
 
             //1. Init the GUI components
             initComponents();
@@ -64,8 +75,6 @@ public class JobShopClient extends javax.swing.JFrame{
         }
 
     }
-
-
 
 
     ///////////////////////////////////////////
@@ -83,15 +92,25 @@ public class JobShopClient extends javax.swing.JFrame{
             @Override
             public void run() {
                 if (args.length >= 0) {
+
+
+                    try {
+                        UIManager.setLookAndFeel(
+                                "javax.swing.plaf.metal.MetalLookAndFeel");
+                        //  "com.sun.java.swing.plaf.motif.MotifLookAndFeel");
+                        //UIManager.getCrossPlatformLookAndFeelClassName());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+
+
                     new JobShopClient(args).setVisible(true);
                 } else {
                     System.out.println(JobShopClient.class + ": call must have the following args: <rmi_ip> <rmi_port> <rmi_service_prefix>");
                 }
             }
         });
-        }
-
-
+    }
 
 
     ///////////////////////////////////////////
@@ -120,23 +139,23 @@ public class JobShopClient extends javax.swing.JFrame{
 
         this.scanner = new Scanner(System.in);
 
-        while(true) {
+        while (true) {
             try {
 
                 // Login Menu
-                if(! this.isLoggedIn)
+                if (!this.isLoggedIn)
                     isLoggedIn = menu_login();
                     // Methods Menu
                 else
                     menu_session();
 
-                    // Methods Menu
+                // Methods Menu
                 //else {
 
-                    // menu_session();
+                // menu_session();
 
 
-                    //============ Call TS remote service ============
+                //============ Call TS remote service ============
                     /*
                     String jsspInstancePath = "edu/ufp/inf/sd/project/data/la01.txt";
                     int makespan = this.jobShopRI.runTS(jsspInstancePath);
@@ -156,7 +175,7 @@ public class JobShopClient extends javax.swing.JFrame{
                     ga.run();
                     */
 
-              //  }
+                //  }
 
             } catch (RemoteException ex) {
                 Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
@@ -181,15 +200,15 @@ public class JobShopClient extends javax.swing.JFrame{
         String option = scanner.nextLine();
 
         // Registry
-        if(option.equals("1"))
+        if (option.equals("1"))
             user_create();
 
         // Login
-        if(option.equals("2"))
+        if (option.equals("2"))
             return user_login();
 
         // Exit
-        if(option.equals("9"))
+        if (option.equals("9"))
             System.exit(1);
 
 
@@ -210,7 +229,7 @@ public class JobShopClient extends javax.swing.JFrame{
 
         Boolean success = authRI.registry(username, password);
 
-        if(success)
+        if (success)
             System.out.println("User criado com sucesso!");
         else
             System.out.println("Erro ao criar um usuario!");
@@ -230,11 +249,10 @@ public class JobShopClient extends javax.swing.JFrame{
 
         sessionRI = authRI.login(username, password);
 
-        if(sessionRI != null){
+        if (sessionRI != null) {
             System.out.println("Sessao iniciada com sucesso!");
             return true;
-        }
-        else {
+        } else {
             System.out.println("Erro ao iniciar sessao!");
             return false;
         }
@@ -314,10 +332,7 @@ public class JobShopClient extends javax.swing.JFrame{
         }
 
 
-
-
     }
-
 
 
     private void add_coins() throws RemoteException {
@@ -365,25 +380,25 @@ public class JobShopClient extends javax.swing.JFrame{
             String plafon = scanner.nextLine();
             System.out.println("\nEstrategia para o JobGroup (ts ou ga):");
             String strat = scanner.nextLine();
-            if(strat.compareTo("ts")==0 || strat.compareTo("ga")==0){
+            if (strat.compareTo("ts") == 0 || strat.compareTo("ga") == 0) {
                 //String path = "edu/ufp/inf/sd/project/data/la04.txt";
                 ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
-                if(Integer.parseInt(plafon) < sessionRI.showCoins()){
-                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),path,strat);
+                if (Integer.parseInt(plafon) < sessionRI.showCoins()) {
+                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon), path, strat);
                     //tira ao saldo o plafon para o jobgroup
                     this.getCoinsPayment(-Integer.parseInt(plafon));
                     if (jobGroupRI != null) {
-                        if(jobGroupRI.getCoins() == 10){
-                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                        if (jobGroupRI.getCoins() == 10) {
+                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI, this);
                             jobGroupRI.verify_winner();
-                        }else{
-                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                        } else {
+                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI, this);
                         }
 
                     } else {
                         System.out.println("Erro ao criar grupo?");
                     }
-                }else {
+                } else {
                     System.out.println("Plafon é superior ao saldo!");
                 }
             }
@@ -419,7 +434,7 @@ public class JobShopClient extends javax.swing.JFrame{
                 System.out.println(name);
 
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if(jobGroupRI!=null){
+            if (jobGroupRI != null) {
                 GroupStatusState s = new GroupStatusState("PAUSE");
                 jobGroupRI.setState(s);
             }
@@ -435,23 +450,23 @@ public class JobShopClient extends javax.swing.JFrame{
             System.out.println("ID do Grupo: ");
             String id = scanner.nextLine();
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if(jobGroupRI != null) {
-                    System.out.println("Criado com sucesso!");
-                    ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
+            if (jobGroupRI != null) {
+                System.out.println("Criado com sucesso!");
+                ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
 
-                    ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
+                ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
 
-                    if(jobGroupRI.getCoins() > 10){
-                        new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                if (jobGroupRI.getCoins() > 10) {
+                    new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI, this);
 
-                    }else if (jobGroupRI.getCoins() == 10){
-                        //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
-                            jobGroupRI.verify_winner();
-                    }
-
-                }else {
-                    System.out.println("Erro ao adicionar worker!");
+                } else if (jobGroupRI.getCoins() == 10) {
+                    //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
+                    jobGroupRI.verify_winner();
                 }
+
+            } else {
+                System.out.println("Erro ao adicionar worker!");
+            }
 
 
         }
@@ -479,7 +494,7 @@ public class JobShopClient extends javax.swing.JFrame{
                 System.out.println(name);
 
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if(jobGroupRI!=null){
+            if (jobGroupRI != null) {
                 GroupStatusState s = new GroupStatusState("CONTINUE");
                 jobGroupRI.setState(s);
             }
@@ -491,7 +506,7 @@ public class JobShopClient extends javax.swing.JFrame{
     }
 
     public void getCoinsPayment(Integer coins) throws RemoteException {
-        if(this.sessionRI!=null){
+        if (this.sessionRI != null) {
             sessionRI.addCoins(coins);
         }
     }
@@ -506,18 +521,26 @@ public class JobShopClient extends javax.swing.JFrame{
 
     /**
      * Create new user
+     *
      * @param evt evento relativo ao carregar no butão
      */
     private void jButtonRegistryActionPerformed(java.awt.event.ActionEvent evt) throws RemoteException {
         if (!jLabelUserName.getText().isEmpty() || !jLabelPassword.getText().isEmpty()) {
 
+            System.out.println("#################################################################################");
+            System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
+            System.out.println("#################################################################################");
+
+
+            System.out.println(jLabelUserName.getText() + jLabelPassword.getText());
             //*******   String token = JWT.createJWT("null",jTextFieldUsername.getText(),jTextFieldPassword.getText(),1000000000);
             Boolean success = authRI.registry(jLabelUserName.getText(), jLabelPassword.getText());
 
-            if (success){
+
+            if (success) {
                 JobShopClient.main(this.args);
                 this.setVisible(false);
-            }else {
+            } else {
                 System.out.println("Tem de se autenticar");
             }
         } else {
@@ -528,19 +551,39 @@ public class JobShopClient extends javax.swing.JFrame{
 
     /**
      * Fazer login do cliente
+     *
      * @param evt evento relativo ao carregar no butão
      * @throws Exception
      */
     private void jButtonLoginActionPerformed(java.awt.event.ActionEvent evt) throws Exception {
         if (!jTextFieldUsername.getText().isEmpty() || !jTextFieldPassword.getText().isEmpty()) {
-            sessionRI = authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
+
+
+            System.out.println("#################################################################################");
+            System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
+            System.out.println("#################################################################################");
+
+           menucorrect.main(args);
+            //  mainSession(args);
+
+            System.out.println("chegou aqui");
+
+            this.sessionRI = authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
+            if (sessionRI != null) {
+                System.out.println("Sessao iniciada com sucesso!");
+
+            } else {
+                System.out.println("Erro ao iniciar sessao!");
+
+            }
+
 
             //  String token = JWT.createJWT("null",jTextFieldUsername.getText(),jTextFieldPassword.getText(),1000000000);
             // HashSessionRI session= hashFactory.login(token);
-            if(sessionRI!=null){
+            if (sessionRI != null) {
                 JobShopClient.main(this.args);
                 this.setVisible(false);
-            }else {
+            } else {
                 System.out.println("Tem de se autenticar");
             }
         } else {
@@ -554,16 +597,16 @@ public class JobShopClient extends javax.swing.JFrame{
         /**
          * Inicializar as variáveis
          */
-        jScrollPane1=new javax.swing.JScrollPane();
+        jScrollPane1 = new javax.swing.JScrollPane();
 
-        jButtonLogin=new javax.swing.JButton();
-        jButtonRegistry=new javax.swing.JButton();
+        jButtonLogin = new javax.swing.JButton();
+        jButtonRegistry = new javax.swing.JButton();
 
-        jTextFieldUsername=new javax.swing.JTextField();
-        jTextFieldPassword=new javax.swing.JTextField();
+        jTextFieldUsername = new javax.swing.JTextField();
+        jTextFieldPassword = new javax.swing.JTextField();
 
-        jLabelUserName=new javax.swing.JLabel();
-        jLabelPassword=new javax.swing.JLabel();
+        jLabelUserName = new javax.swing.JLabel();
+        jLabelPassword = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -600,7 +643,7 @@ public class JobShopClient extends javax.swing.JFrame{
         /**
          * Parte gráfica
          */
-        javax.swing.GroupLayout layout=new javax.swing.GroupLayout(getContentPane());
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -641,6 +684,6 @@ public class JobShopClient extends javax.swing.JFrame{
 
         pack();
     }
-
-
 }
+
+
