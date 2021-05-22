@@ -4,7 +4,9 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
+import edu.ufp.inf.sd.RabbitUtils;
 import edu.ufp.inf.sd.project.client.WorkerRI;
+import edu.ufp.inf.sd.project.producer.Producer;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.util.geneticalgorithm.CrossoverStrategies;
@@ -93,26 +95,27 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             channel.exchangeDeclare(this.exchangeName, "direct");
             channel.queueBind(id+this.name, this.exchangeName, id+this.name);
             //channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+            cleopatra(id);
             //Enviar o path
-            String message = path;
+            String message = path ;
+
             channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
             System.out.println(" [x] Sent '" + message + "'");
 
+            Thread.currentThread().sleep(6000);
             //Enviar as strats
 
 
-            ///Parte de receber se deus quiser
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String msg = new String(delivery.getBody(), "UTF-8");
-                    System.out.println(" [x] Received '" + msg + "'");
 
-            };
-            channel.basicConsume(id+this.name+"_results", true, deliverCallback, consumerTag -> { });
+
+
+
+
 
             //sendMessage(channel,this.path);
            // Thread.currentThread().sleep(5000);
             // Change strategy to CrossoverStrategies.TWO
-           // sendMessage(channel, String.valueOf(CrossoverStrategies.TWO.strategy));
+            //sendMessage(channel, String.valueOf(CrossoverStrategies.TWO.strategy));
             //Thread.currentThread().sleep(2000);
             // DeliverCallback deliverCallback = (consumerTag, delivery) -> {
               //  String message = new String(delivery.getBody(), "UTF-8");
@@ -128,7 +131,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             // Stop the GA
             //sendMessage(channel, "stop");
 
-        } catch (IOException | TimeoutException e) {
+        } catch (IOException | TimeoutException | InterruptedException e) {
             Logger.getLogger(this.name).log(Level.INFO, e.toString());
         } /* The try-with-resources will close resources automatically in reverse order
             finally {
@@ -140,6 +143,69 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 e.printStackTrace();
             }
         } */
+    }
+
+    private void cleopatra(String id) {
+        try {
+            /* Open a connection and a channel, and declare the queue from which to consume.
+            Declare the queue here, as well, because we might start the client before the publisher. */
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost("localhost");
+            //Use same username/passwd as the for accessing Management UI @ http://localhost:15672/
+            //Default credentials are: guest/guest (change accordingly)
+            factory.setUsername("guest");
+            factory.setPassword("guest");
+            //factory.setPassword("guest4rabbitmq");
+            Connection connection=factory.newConnection();
+            Channel channel=connection.createChannel();
+
+            String resultsQueue = id+this.name + "_results";
+
+            channel.queueDeclare(resultsQueue, false, false, false, null);
+            //channel.queueDeclare(Producer.QUEUE_NAME, true, false, false, null);
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+            /* The server pushes messages asynchronously, hence we provide a
+            DefaultConsumer callback that will buffer the messages until we're ready to use them.
+            Consumer client = new DefaultConsumer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    String message=new String(body, "UTF-8");
+                    System.out.println(" [x] Received '" + message + "'");
+                }
+            };
+            channel.basicConsume(Producer.QUEUE_NAME, true, client    );
+            */
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received from worker  '"+ id +":" + message + "'");
+                if(message.compareTo("Setting Strategy 1")!=0){
+                    String[] parts = message.split("=");
+                    String parts1 = parts[1];
+                    //System.out.println(" [x] Depois do split  :" + parts1 + "'");
+                    String[] parts2 = parts1.split(" ");
+                    String parts3 = parts[1];
+
+                    //Se o makespan que recebemos for menor que o que temos para este worker , atualizamos
+                    if(this.makespan.get(id)==null){
+                        this.makespan.put(id,Integer.parseInt(parts3.substring(1)));
+                    }else if(this.makespan.get(id) > Integer.parseInt(parts3.substring(1) )){
+                        this.makespan.replace(id,Integer.parseInt(parts3.substring(1)));
+                    }
+                }
+
+
+
+            };
+            channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> { });
+
+            verify_winner();
+
+        } catch (Exception e){
+            //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());
+            e.printStackTrace();
+        }
     }
 
 
@@ -166,7 +232,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                     //Falta a parte de meter o saldo ao vencedor
                 }
 
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException | TimeoutException e) {
                 e.printStackTrace();
             }
 
@@ -187,7 +253,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         server_says("Result Received");
         try {
             verify_winner();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException | TimeoutException e) {
             e.printStackTrace();
         }
     }
@@ -226,72 +292,146 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-    public void askForJob(String workerID) throws IOException {
-        server_says("Worker asked for a job");
-
-        if(getCoins() > 10){
-            //Enviamos o job e ele executa
-            this.coins--;
-            //Falta adicionar ao saldo do user!!!!!
-
-            this.workers.get(workerID).receiveJob(this.groupInfoState);
-            this.workers.get(workerID).receiveCoins(1);
-
-        }else {
-            ///Entra aqui assim que as coins forem 10 , verificamos quem tem a melhor solução
-
-            verify_winner();
-            //Falta a parte de meter o saldo ao vencedor
-        }
-
-    }
-    public void verify_winner() throws IOException {
+//    public void askForJob(String workerID) throws IOException {
+//        server_says("Worker asked for a job");
+//
+//        if(getCoins() > 10){
+//            //Enviamos o job e ele executa
+//            this.coins--;
+//            //Falta adicionar ao saldo do user!!!!!
+//
+//            this.workers.get(workerID).receiveJob(this.groupInfoState);
+//            this.workers.get(workerID).receiveCoins(1);
+//
+//        }else {
+//            ///Entra aqui assim que as coins forem 10 , verificamos quem tem a melhor solução
+//
+//            verify_winner();
+//            //Falta a parte de meter o saldo ao vencedor
+//        }
+//
+//    }
+    public void verify_winner() throws IOException, InterruptedException, TimeoutException {
         ///Começamos a verificar pela primeira posiçao
-        int aux = 0;
-        String winner="";
+
         //For each em que verificamos se o valor atual do ciclo é menor que o que temos guardado, caso seja , substituimos
         if (this.coins > 10){
             return ;
         }
-        for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
-            String key = entry.getKey();
-            Integer value = entry.getValue();
-            //Cada worker recebe 1 pelo trabalho
+        int aux = 0;
+        String winner="";
+        if(this.strat.compareTo("ga")==0){
+            //se a estrategia for ga , damos um sleep de 6000milis , para termos tempo de receber os resultados
+            Thread.currentThread().sleep(6000);
+            for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
+                String key = entry.getKey();
+                Integer value = entry.getValue();
+                //Cada worker recebe 1 pelo trabalho
 
-            this.workers.get(entry.getKey()).receiveCoins(1);
-            if(aux == 0){
-                aux = value;
-                winner = key;
+                this.workers.get(entry.getKey()).receiveCoins(1);
+                if(aux == 0){
+                    aux = value;
+                    winner = key;
 
+                }
+                if(value < aux){
+
+                    aux = value;
+                    winner = key;
+
+                }
             }
-            if(value < aux){
 
-                aux = value;
-                winner = key;
 
+            ///Depois de encontrado a melhor soluçao:
+
+            //Mudamos o estado do jobgroup para CONCLUIDO
+            this.groupStatusState.setStatus("MATCH_FOUND");
+            //Enviamos notificaçao a todos os workers da solução
+            String message = "Winner foi:" + winner + "Makespan:" + aux + "\n";
+
+            ConnectionFactory factory=new ConnectionFactory();
+            factory.setHost("localhost");
+            factory.setUsername("guest");
+            factory.setPassword("guest");
+            //factory.setPassword("guest4rabbitmq");
+
+            /* try-with-resources\. will close resources automatically in reverse order... avoids finally */
+            //Create a channel, which is where most of the API resides
+                 Connection connection=factory.newConnection();
+                 Channel channel=connection.createChannel();
+
+            /* We must declare a queue to send to; this i
+            s idempotent, i.e.,
+            it will only be created if it doesn't exist already;
+            then we can publish a message to the queue; The message content is a
+            byte array (can encode whatever we need). */
+
+                channel.queueDeclare(id+this.name, false, false, false, null);
+                channel.exchangeDeclare(this.exchangeName, "direct");
+                channel.queueBind(id+this.name, this.exchangeName, id+this.name);
+
+
+            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
+            System.out.println(" [x] Sent '" + message + "'");
+            channel.queueDelete(id+this.name);
+            //plafon a 0
+            this.coins = 0;
+            this.workers.get(winner).receiveCoins(10);
+            System.out.println();
+            //Fazemos detach de todos os workers
+            this.workers.forEach((id, workerRI) -> {
+                try {
+                    this.detach(workerRI);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            });
+        }else {
+
+            for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
+                String key = entry.getKey();
+                Integer value = entry.getValue();
+                //Cada worker recebe 1 pelo trabalho
+
+                this.workers.get(entry.getKey()).receiveCoins(1);
+                if(aux == 0){
+                    aux = value;
+                    winner = key;
+
+                }
+                if(value < aux){
+
+                    aux = value;
+                    winner = key;
+
+                }
             }
+
+
+            ///Depois de encontrado a melhor soluçao:
+
+            //Mudamos o estado do jobgroup para CONCLUIDO
+            this.groupStatusState.setStatus("MATCH_FOUND");
+            //Enviamos notificaçao a todos os workers da solução
+            notifyAllObservers("Nome do utilizador:" + winner + "Makespan:" + aux + "\n");
+            //plafon a 0
+            this.coins = 0;
+            this.workers.get(winner).receiveCoins(10);
+            System.out.println("Winner foi:" + winner + "Makespan:" + aux + "\n");
+            //Fazemos detach de todos os workers
+            this.workers.forEach((id, workerRI) -> {
+                try {
+                    this.detach(workerRI);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            });
         }
 
 
-        ///Depois de encontrado a melhor soluçao:
-
-        //Mudamos o estado do jobgroup para CONCLUIDO
-            this.groupStatusState.setStatus("MATCH_FOUND");
-        //Enviamos notificaçao a todos os workers da solução
-        notifyAllObservers("Nome do utilizador:" + winner + "Makespan:" + aux + "\n");
-        //plafon a 0
-        this.coins = 0;
-        this.workers.get(winner).receiveCoins(10);
-        System.out.println("Winner foi:" + winner + "Makespan:" + aux + "\n");
-        //Fazemos detach de todos os workers
-        this.workers.forEach((id, workerRI) -> {
-            try {
-               this.detach(workerRI);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        });
     }
 
 
@@ -339,7 +479,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             }else {
                 try {
                     verify_winner();
-                } catch (IOException e) {
+                } catch (IOException | InterruptedException | TimeoutException e) {
                     e.printStackTrace();
                 }
                 return null;
@@ -364,13 +504,14 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 this.workers.put(newID, workerRI);
                 workerRI.setId(newID);
                 //Antes de darmos o trabalho ao worker , temos que abrir o canal de comunicaçao , chamando o producer
+                this.coins--;
                 producer(newID);
                 //this.workers.get(newID).receiveJob(this.groupInfoState);
                 return this.groupInfoState;
             }else {
                 try {
                     verify_winner();
-                } catch (IOException e) {
+                } catch (IOException | InterruptedException | TimeoutException e) {
                     e.printStackTrace();
                 }
                 return null;

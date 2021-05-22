@@ -122,7 +122,7 @@ public class JobShopClient{
                 break;
             } catch (IOException e) {
                 e.printStackTrace();
-            } catch (TimeoutException e) {
+            } catch (TimeoutException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -201,7 +201,7 @@ public class JobShopClient{
     /*
      *  Show session menu
      */
-    public void menu_session() throws IOException, TimeoutException {
+    public void menu_session() throws IOException, TimeoutException, InterruptedException {
         System.out.println("\nSession:");
         System.out.println("[1] - Logout");
 
@@ -313,7 +313,7 @@ public class JobShopClient{
 
     ///Create JobGroup
 
-    private void jobgroup_create() throws IOException, TimeoutException {
+    private void jobgroup_create() throws IOException, TimeoutException, InterruptedException {
         if (this.sessionRI != null) {
             System.out.print("\nNome do Grupo: ");
             String name = scanner.nextLine();
@@ -387,7 +387,7 @@ public class JobShopClient{
     /*
      *  Add worker to jobgroup
      */
-    private void jobgroup_add_worker() throws IOException, TimeoutException {
+    private void jobgroup_add_worker() throws IOException, TimeoutException, InterruptedException {
         if (this.sessionRI != null) {
 
             System.out.println("ID do Grupo: ");

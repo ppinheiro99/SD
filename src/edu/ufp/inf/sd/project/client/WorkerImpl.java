@@ -63,65 +63,23 @@ public void testerabbit() throws IOException, TimeoutException {
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), "UTF-8");
+
         System.out.println(" [x] Received '" +
                 delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
-                algoritmo(message,this.id+jobGroupRI.getName());
+
+            algoritmo(message,this.id+jobGroupRI.getName(),CrossoverStrategies.ONE);
+
+
     };
     channel.basicConsume(this.id+jobGroupRI.getName(), true, deliverCallback, consumerTag -> { });
 
 
 
+
 }
-    public void rabbito() {
-        try {
-            /* Open a connection and a channel, and declare the queue from which to consume.
-            Declare the queue here, as well, because we might start the client before the publisher. */
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("localhost");
-            //Use same username/passwd as the for accessing Management UI @ http://localhost:15672/
-            //Default credentials are: guest/guest (change accordingly)
-            factory.setUsername("guest");
-            factory.setPassword("guest");
-            //factory.setPassword("guest4rabbitmq");
-            Connection connection=factory.newConnection();
-            Channel channel=connection.createChannel();
 
-            String resultsQueue = "PILA";
-
-            channel.queueDeclare(resultsQueue, false, false, false, null);
-
-            //channel.queueDeclare(Producer.QUEUE_NAME, true, false, false, null);
-            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
-            /* The server pushes messages asynchronously, hence we provide a
-            DefaultConsumer callback that will buffer the messages until we're ready to use them.
-            Consumer client = new DefaultConsumer(channel) {
-                @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                    String message=new String(body, "UTF-8");
-                    System.out.println(" [x] Received '" + message + "'");
-                }
-            };
-            channel.basicConsume(Producer.QUEUE_NAME, true, client    );
-            */
-
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String message = new String(delivery.getBody(), "UTF-8");
-                System.out.println(" [x] Received '" + message + "'");
-
-                System.out.println(message + " " + resultsQueue + " " + CrossoverStrategies.ONE);
-                algoritmo(message,resultsQueue);
-            };
-
-            channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> { });
-
-        } catch (Exception e){
-            //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());
-            e.printStackTrace();
-        }
-    }
-    public void algoritmo(String message,  String qeue ){
-        GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(message,qeue,CrossoverStrategies.TWO);
+    public void algoritmo(String message,  String qeue , CrossoverStrategies strat){
+        GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(message,qeue, strat);
         ga.run();
 
     }
@@ -179,8 +137,8 @@ public void testerabbit() throws IOException, TimeoutException {
         this.groupStatus = this.jobGroupRI.getState();
 
         workerSays("The Status of JobGroup is: " + this.groupStatus.getStatus());
-        if(this.groupStatus.getStatus().compareTo("CONTINUE")==0)
-            this.jobGroupRI.askForJob(this.id);
+        //if(this.groupStatus.getStatus().compareTo("CONTINUE")==0)
+            //this.jobGroupRI.askForJob(this.id);
 
     }
 }

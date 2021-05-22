@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 
 public interface JobGroupRI extends Remote {
     public GroupInfoState attach(WorkerRI workerRI) throws RemoteException;
@@ -25,9 +26,9 @@ public interface JobGroupRI extends Remote {
     public void setCoins(int coins) throws RemoteException;
     public void receiveResults(String id , Integer makespan) throws RemoteException;
 
-    public void verify_winner() throws IOException;
+    public void verify_winner() throws IOException, InterruptedException, TimeoutException;
 
-    public void askForJob(String workerID) throws RemoteException, IOException;
+
 
 
     public void SendJobs() throws RemoteException;
