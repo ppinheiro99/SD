@@ -20,8 +20,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class        JobShopClient{
+public class JobShopClient extends javax.swing.JFrame{
 
+    private String[] args;
     private SetupContextRMI contextRMI;
     private JobGroupRI jobGroupRI;
     private Scanner scanner;
@@ -29,30 +30,70 @@ public class        JobShopClient{
     private AuthFactoryRI authRI;
     private UserSessionRI sessionRI;
 
-    ///////////////////////////////////////////
-    // Main
-    public static void main(String[] args) {
-        if (args != null && args.length < 2) {
-            System.exit(-1);
-        } else {
-            JobShopClient hwc=new JobShopClient(args);
-            hwc.lookupService();
-            hwc.playService();
-        }
-    }
+/**Parte Grafica**/
+    private javax.swing.JLabel jLabelUserName;
+    private javax.swing.JLabel jLabelPassword;
+    private javax.swing.JTextField jTextFieldUsername;
+    private javax.swing.JTextField jTextFieldPassword;
+    private javax.swing.JButton jButtonLogin;
+    private javax.swing.JButton jButtonRegistry;
+    private javax.swing.JScrollPane jScrollPane1;
+
+
+
     ///////////////////////////////////////////
     // Initial Setup
     public JobShopClient(String[] args) {
         try {
+
             String registryIP = args[0];
             String registryPort = args[1];
             String serviceName = args[2];
+            this.args=args;
+            this.args[0]=registryIP;
+            this.args[1]=registryPort;
+            this.args[2]=serviceName;
+
+            //1. Init the GUI components
+            initComponents();
+            //2. Init the RMI context (load security manager, lookup subject, etc.)
             contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
 
         } catch (RemoteException e) {
             Logger.getLogger(JobShopClient.class.getName()).log(Level.SEVERE, null, e);
         }
+
     }
+
+
+
+
+    ///////////////////////////////////////////
+    // Main
+    public static void main(String[] args) {
+      /*  if (args != null && args.length < 2) {
+            System.exit(-1);
+        } else {
+            JobShopClient hwc=new JobShopClient(args);
+            hwc.lookupService();
+            hwc.playService();
+        }*/
+        java.awt.EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                if (args.length >= 0) {
+                    new JobShopClient(args).setVisible(true);
+                } else {
+                    System.out.println(JobShopClient.class + ": call must have the following args: <rmi_ip> <rmi_port> <rmi_service_prefix>");
+                }
+            }
+        });
+        }
+
+
+
+
     ///////////////////////////////////////////
     // RMI Register
     // jobShopRI = (JobShopRI) registry.lookup(serviceUrl);
@@ -157,7 +198,7 @@ public class        JobShopClient{
     }
 
     /*
-     *  Create new user
+     *  Create new user registo
      */
     private void user_create() throws RemoteException {
         System.out.print("Username: ");
@@ -174,6 +215,7 @@ public class        JobShopClient{
         else
             System.out.println("Erro ao criar um usuario!");
     }
+
 
     /*
      *  Login user
@@ -453,5 +495,152 @@ public class        JobShopClient{
             sessionRI.addCoins(coins);
         }
     }
+
+    //###############################################################################
+    //#############################  Interface Grafica  ################################################
+    //################################################################################
+    //##############################################################################
+    /*
+     *  Gui
+     */
+
+    /**
+     * Create new user
+     * @param evt evento relativo ao carregar no butão
+     */
+    private void jButtonRegistryActionPerformed(java.awt.event.ActionEvent evt) throws RemoteException {
+        if (!jLabelUserName.getText().isEmpty() || !jLabelPassword.getText().isEmpty()) {
+
+            //*******   String token = JWT.createJWT("null",jTextFieldUsername.getText(),jTextFieldPassword.getText(),1000000000);
+            Boolean success = authRI.registry(jLabelUserName.getText(), jLabelPassword.getText());
+
+            if (success){
+                JobShopClient.main(this.args);
+                this.setVisible(false);
+            }else {
+                System.out.println("Tem de se autenticar");
+            }
+        } else {
+            System.out.println("Preencha todos os campos");
+        }
+
+    }
+
+    /**
+     * Fazer login do cliente
+     * @param evt evento relativo ao carregar no butão
+     * @throws Exception
+     */
+    private void jButtonLoginActionPerformed(java.awt.event.ActionEvent evt) throws Exception {
+        if (!jTextFieldUsername.getText().isEmpty() || !jTextFieldPassword.getText().isEmpty()) {
+            sessionRI = authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
+
+            //  String token = JWT.createJWT("null",jTextFieldUsername.getText(),jTextFieldPassword.getText(),1000000000);
+            // HashSessionRI session= hashFactory.login(token);
+            if(sessionRI!=null){
+                JobShopClient.main(this.args);
+                this.setVisible(false);
+            }else {
+                System.out.println("Tem de se autenticar");
+            }
+        } else {
+            System.out.println("Preencha todos os campos");
+        }
+    }
+
+
+    private void initComponents() {
+
+        /**
+         * Inicializar as variáveis
+         */
+        jScrollPane1=new javax.swing.JScrollPane();
+
+        jButtonLogin=new javax.swing.JButton();
+        jButtonRegistry=new javax.swing.JButton();
+
+        jTextFieldUsername=new javax.swing.JTextField();
+        jTextFieldPassword=new javax.swing.JTextField();
+
+        jLabelUserName=new javax.swing.JLabel();
+        jLabelPassword=new javax.swing.JLabel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        /**
+         * Atribuir textos e respetivas funções às labels e butões
+         */
+        jButtonLogin.setText("Login");
+        jButtonLogin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                try {
+                    jButtonLoginActionPerformed(evt);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        jButtonRegistry.setText("Registry");
+        jButtonRegistry.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                try {
+                    jButtonRegistryActionPerformed(evt);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        jTextFieldUsername.setText("username");
+        jTextFieldPassword.setText("password");
+        jLabelUserName.setText("Username");
+        jLabelPassword.setText("Password:");
+
+        /**
+         * Parte gráfica
+         */
+        javax.swing.GroupLayout layout=new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                                .addComponent(jLabelUserName)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(jTextFieldUsername, javax.swing.GroupLayout.DEFAULT_SIZE, 141, Short.MAX_VALUE)
+                                                .addComponent(jLabelPassword)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(jTextFieldPassword, javax.swing.GroupLayout.DEFAULT_SIZE, 141, Short.MAX_VALUE))
+                                )
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonLogin)
+                                .addComponent(jButtonRegistry)
+
+                        )
+        );
+        layout.setVerticalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 246, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonLogin)
+                                        .addComponent(jButtonRegistry)
+                                )
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabelUserName)
+                                        .addComponent(jTextFieldUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabelPassword)
+                                        .addComponent(jTextFieldPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        pack();
+    }
+
 
 }
