@@ -91,15 +91,7 @@ public class menucorrect extends JFrame {
         gbcPanel0.anchor = GridBagConstraints.NORTH;
         gbPanel0.setConstraints(lbLabel0, gbcPanel0);
         pnPanel0.add(lbLabel0);
-        btSent.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                try {
-                    lbLabel0(evt);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+
 
 /******************************************************* BUTTOES *****************************************************/
         btSent = new JButton("sent");
