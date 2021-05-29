@@ -444,7 +444,7 @@ public class menucorrect extends JFrame {
     private void btListexistinggroups(java.awt.event.ActionEvent evt) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder(9999);
         stringBuilder.append("<html>DISPLAY:<br/> **List existing groups** <br/>");
-        System.getProperty("line.separator");
+
         lbLabel0.setText(stringBuilder.toString());
         if (JobShopClient_static.getSessionRI() != null) {
 
