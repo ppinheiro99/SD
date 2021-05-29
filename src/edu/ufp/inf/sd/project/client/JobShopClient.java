@@ -99,6 +99,9 @@ public class JobShopClient extends javax.swing.JFrame {
             hwc.lookupService();
             hwc.playService();
         }*/
+        //lookupService();
+
+
         java.awt.EventQueue.invokeLater(new Runnable() {
 
             @Override
@@ -575,11 +578,11 @@ public class JobShopClient extends javax.swing.JFrame {
             System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
             System.out.println("#################################################################################");
 
-
+            menucorrect.menucorrect(this,args);
             this.sessionRI = authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
             if (sessionRI != null) {
                 System.out.println("Sessao iniciada com sucesso!");
-                menucorrect.menucorrect(this,args);
+
 
             } else {
                 System.out.println("Erro ao iniciar sessao!");

@@ -84,6 +84,8 @@ public class menucorrect extends JFrame {
     public menucorrect() throws RemoteException {
         super("Session:");
 
+
+
         pnPanel0 = new JPanel();
         GridBagLayout gbPanel0 = new GridBagLayout();
         GridBagConstraints gbcPanel0 = new GridBagConstraints();
@@ -429,6 +431,7 @@ public class menucorrect extends JFrame {
 
     private void taArea0(java.awt.event.ActionEvent evt) throws RemoteException {
 
+
     }
 
     private void lbLabel0(java.awt.event.ActionEvent evt) throws RemoteException {
@@ -441,6 +444,7 @@ public class menucorrect extends JFrame {
     private void btListexistinggroups(java.awt.event.ActionEvent evt) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder(9999);
         stringBuilder.append("DISPLAY:\n **List existing groups** \n");
+        System.getProperty("line.separator");
         lbLabel0.setText(stringBuilder.toString());
         if (JobShopClient_static.getSessionRI() != null) {
 
@@ -490,43 +494,62 @@ public class menucorrect extends JFrame {
 
     private void btCreateGroupandattachworker(java.awt.event.ActionEvent evt) throws IOException, TimeoutException {
         StringBuilder stringBuilder = new StringBuilder(9999);
-        stringBuilder.append("DISPLAY:\n **Create Group and attach worker** \n");
+        stringBuilder.append("<html>DISPLAY: <br/> **Create Group and attach worker** <br/>");
         lbLabel0.setText(stringBuilder.toString());
 
         if (sessionRI_static != null) {
-            stringBuilder.append("\nNome do Grupo: ");
+            stringBuilder.append("<br/> Nome do Grupo: ");
             lbLabel0.setText(stringBuilder.toString());
             String name = "";
-            if (btSent.getModel().isPressed()) {
-                name = taArea0.getText();
-                // stringBuilder.append(taArea0.getText());
-                // lbLabel0.setText(stringBuilder.toString());
-                if (name.compareTo("") == 0) return;
+
+            while (true) {
+                if (btSent.getModel().isPressed()) {
+                    name = taArea0.getText();
+                    if (name.compareTo("") != 0) break;
+
+                    // stringBuilder.append(taArea0.getText());
+                    // lbLabel0.setText(stringBuilder.toString());
+
+                }
+
             }
 
 
-            stringBuilder.append("\nPath para Ficheiro:");
+
+            stringBuilder.append("<br/>Path para Ficheiro:");
             lbLabel0.setText(stringBuilder.toString());
             String path = "";
-            if (btSent.getModel().isPressed()) {
-                path = taArea0.getText();
-                if (path.compareTo("") == 0) return;
+            while (true) {
+                if (btSent.getModel().isPressed()) {
+                    path = taArea0.getText();
+                    if (path.compareTo("") != 0) break;
+                }
+
             }
 
-            stringBuilder.append("\nPlafon para o JobGroup:");
+
+            stringBuilder.append("<br/>Plafon para o JobGroup:");
             lbLabel0.setText(stringBuilder.toString());
             String plafon = "";
-            if (btSent.getModel().isPressed()) {
-                plafon = taArea0.getText();
-                if (plafon.compareTo("") == 0) return;
+
+            while (true) {
+                if (btSent.getModel().isPressed()) {
+                    plafon = taArea0.getText();
+                    if (plafon.compareTo("") != 0) break;
+                }
+
             }
 
-            stringBuilder.append("\nEstrategia para o JobGroup (ts ou ga):");
+            stringBuilder.append("<br/>Estrategia para o JobGroup (ts ou ga):");
             lbLabel0.setText(stringBuilder.toString());
             String strat = "";
-            if (btSent.getModel().isPressed()) {
-                strat = taArea0.getText();
-                if (strat.compareTo("") == 0) return;
+
+            while (true) {
+                if (btSent.getModel().isPressed()) {
+                    strat = taArea0.getText();
+                    if (strat.compareTo("") != 0) break;
+                }
+
             }
 
             if (strat.compareTo("ts") == 0 || strat.compareTo("ga") == 0) {
@@ -555,27 +578,38 @@ public class menucorrect extends JFrame {
 
 
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
 
         }
+
+        stringBuilder.append("</html>");
+        lbLabel0.setText(stringBuilder.toString());
 
     }
 
     private void btAttachworkertogroup(java.awt.event.ActionEvent evt) throws IOException, TimeoutException {
         StringBuilder stringBuilder = new StringBuilder(9999);
-        stringBuilder.append("DISPLAY:\n **Attach worker to group** \n");
+        stringBuilder.append("<html> DISPLAY: <br/> **Attach worker to group** <br/>");
         lbLabel0.setText(stringBuilder.toString());
         if (JobShopClient_static.getSessionRI() != null) {
-            stringBuilder.append("ID do Grupo: ");
+            stringBuilder.append("ID do Grupo: <br/>");
             lbLabel0.setText(stringBuilder.toString());
             String id = "";
-            if (btSent.getModel().isPressed()) {
-                id = taArea0.getText();
-                if (id.compareTo("") == 0) return;
+
+
+            while (true) {
+                if(btSent.getModel().isPressed()){
+                    id = taArea0.getText();
+                    break;
+                }
+
             }
+
+
+
             JobGroupRI jobGroupRI = JobShopClient_static.getSessionRI().joinJobGroup(Integer.parseInt(id));
             if (jobGroupRI != null) {
-                stringBuilder.append("\nCriado com sucesso!");
+                stringBuilder.append("<br/>Criado com sucesso!");
                 lbLabel0.setText(stringBuilder.toString());
                 ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
 
@@ -596,7 +630,7 @@ public class menucorrect extends JFrame {
 
 
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
         }
 
 
@@ -703,19 +737,21 @@ public class menucorrect extends JFrame {
 
     private void btListUsers(java.awt.event.ActionEvent evt) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder(9999);
-        stringBuilder.append("DISPLAY:\n");
+        stringBuilder.append("<html> DISPLAY:<br/>");
         lbLabel0.setText(stringBuilder.toString());
         if (sessionRI_static != null) {
             ArrayList<User> users = sessionRI_static.listUsers();
-            stringBuilder.append("\nUsers Online:");
+            stringBuilder.append("<br/>Users Online:");
             for (User a : users) {
                 stringBuilder.append(a.getUsername());
-                stringBuilder.append("\n");
+                stringBuilder.append("<br/>");
             }
-            stringBuilder.append("\n");
+            stringBuilder.append("<br/>");
+            stringBuilder.append("</html>");
+
             lbLabel0.setText(stringBuilder.toString());
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText("<html> ERR0 A ACEDER A CLASS SESSAORI <br/>:( </html>");
         }
 
 
