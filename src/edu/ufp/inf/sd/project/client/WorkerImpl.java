@@ -6,7 +6,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
-import edu.ufp.inf.sd.project.producer.Producer;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
@@ -15,10 +14,10 @@ import edu.ufp.inf.sd.project.util.geneticalgorithm.GeneticAlgorithmJSSP;
 import edu.ufp.inf.sd.project.util.tabusearch.TabuSearchJSSP;
 
 import java.io.IOException;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,6 +49,7 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
     public static void main(String[] args){}
 
 public void testerabbit() throws IOException, TimeoutException {
+
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost("localhost");
     Connection connection = factory.newConnection();
@@ -66,8 +66,12 @@ public void testerabbit() throws IOException, TimeoutException {
 
         System.out.println(" [x] Received '" +
                 delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
+            if(message.compareTo("1")!=0 || message.compareTo("2")!=0 || message.compareTo("3")!=3 || message.compareTo("stop")!=0){
 
-            algoritmo(message,this.id+jobGroupRI.getName(),CrossoverStrategies.ONE);
+                algoritmo(message,this.id+jobGroupRI.getName(),CrossoverStrategies.ONE);
+            }
+
+
 
 
     };

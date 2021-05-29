@@ -1,9 +1,6 @@
 package edu.ufp.inf.sd.project.server.jobgroup;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.client.*;
 import edu.ufp.inf.sd.RabbitUtils;
 import edu.ufp.inf.sd.project.client.WorkerRI;
 import edu.ufp.inf.sd.project.producer.Producer;
@@ -32,7 +29,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     transient private static int nGroups = 0;
 
 
-
+    private ArrayList<String> filas = new ArrayList<String>();
     transient private final HashMap<String, WorkerRI> workers;
     private final HashMap<String, Integer> makespan;
     private GroupInfoState groupInfoState;
@@ -92,24 +89,33 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             byte array (can encode whatever we need). */
 
             channel.queueDeclare(id+this.name, false, false, false, null);
+            String qeue = id+this.name;
+            this.filas.add(qeue);
             channel.exchangeDeclare(this.exchangeName, "direct");
             channel.queueBind(id+this.name, this.exchangeName, id+this.name);
             //channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-            cleopatra(id);
+            consume_results(id);
             //Enviar o path
             String message = path ;
 
             channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
             System.out.println(" [x] Sent '" + message + "'");
 
-            Thread.currentThread().sleep(6000);
+
             //Enviar as strats
+            message = String.valueOf(CrossoverStrategies.TWO.strategy);
+            System.out.println(" [x] Sent strat '" + message + "'");
+            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
 
 
 
+            Thread.currentThread().sleep(6000);
 
+            message = String.valueOf(CrossoverStrategies.THREE.strategy);
+            System.out.println(" [x] Sent strat '" + message + "'");
+            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
 
-
+            Thread.currentThread().sleep(6000);
 
 
             //sendMessage(channel,this.path);
@@ -145,7 +151,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         } */
     }
 
-    private void cleopatra(String id) {
+    private void consume_results(String id) {
         try {
             /* Open a connection and a channel, and declare the queue from which to consume.
             Declare the queue here, as well, because we might start the client before the publisher. */
@@ -180,7 +186,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received from worker  '"+ id +":" + message + "'");
-                if(message.compareTo("Setting Strategy 1")!=0){
+                if(message.compareTo("Setting Strategy 1")!=0 && message.compareTo("Setting Strategy 2")!=0 && message.compareTo("Setting Strategy 3")!=0){
                     String[] parts = message.split("=");
                     String parts1 = parts[1];
                     //System.out.println(" [x] Depois do split  :" + parts1 + "'");
@@ -200,7 +206,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             };
             channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> { });
 
-            verify_winner();
+                verify_winner();
+
+
 
         } catch (Exception e){
             //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());
@@ -318,11 +326,32 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         if (this.coins > 10){
             return ;
         }
+
         int aux = 0;
         String winner="";
+
         if(this.strat.compareTo("ga")==0){
+            ConnectionFactory factory=new ConnectionFactory();
+            factory.setHost("localhost");
+            factory.setUsername("guest");
+            factory.setPassword("guest");
+            //factory.setPassword("guest4rabbitmq");
+
+            /* try-with-resources\. will close resources automatically in reverse order... avoids finally */
+            //Create a channel, which is where most of the API resides
+            Connection connection=factory.newConnection();
+            Channel channel=connection.createChannel();
+            //verificamos se todas as filas ja estao vazias
+
+            for(int i= 0 ; i < filas.size();i++){
+                AMQP.Queue.DeclareOk response = channel.queueDeclarePassive(filas.get(i)+"_results");
+                if(response.getMessageCount()>0){
+                    return;
+                }
+            }
+
             //se a estrategia for ga , damos um sleep de 6000milis , para termos tempo de receber os resultados
-            Thread.currentThread().sleep(6000);
+
             for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
                 String key = entry.getKey();
                 Integer value = entry.getValue();
@@ -350,16 +379,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             //Enviamos notificaçao a todos os workers da solução
             String message = "Winner foi:" + winner + "Makespan:" + aux + "\n";
 
-            ConnectionFactory factory=new ConnectionFactory();
-            factory.setHost("localhost");
-            factory.setUsername("guest");
-            factory.setPassword("guest");
-            //factory.setPassword("guest4rabbitmq");
 
-            /* try-with-resources\. will close resources automatically in reverse order... avoids finally */
-            //Create a channel, which is where most of the API resides
-                 Connection connection=factory.newConnection();
-                 Channel channel=connection.createChannel();
 
             /* We must declare a queue to send to; this i
             s idempotent, i.e.,
@@ -371,10 +391,12 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 channel.exchangeDeclare(this.exchangeName, "direct");
                 channel.queueBind(id+this.name, this.exchangeName, id+this.name);
 
+            for(int i= 0 ; i < filas.size();i++){
+                channel.basicPublish(this.exchangeName, filas.get(i), null, message.getBytes("UTF-8"));
+                System.out.println(" [x] Sent '" + message + "'");
+                channel.queueDelete(filas.get(i));
+            }
 
-            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
-            System.out.println(" [x] Sent '" + message + "'");
-            channel.queueDelete(id+this.name);
             //plafon a 0
             this.coins = 0;
             this.workers.get(winner).receiveCoins(10);
