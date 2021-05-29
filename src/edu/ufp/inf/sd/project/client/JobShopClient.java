@@ -5,6 +5,7 @@ import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.server.user.User;
+import edu.ufp.inf.sd.project.util.jwt.JWT;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 
 import java.io.IOException;
@@ -12,7 +13,6 @@ import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
@@ -32,13 +32,19 @@ public class JobShopClient{
     ///////////////////////////////////////////
     // Main
     public static void main(String[] args) {
-        if (args != null && args.length < 2) {
-            System.exit(-1);
-        } else {
-            JobShopClient hwc=new JobShopClient(args);
-            hwc.lookupService();
-            hwc.playService();
-        }
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (args != null && args.length < 2) {
+                    System.exit(-1);
+                } else {
+                    JobShopClient hwc=new JobShopClient(args);
+                    hwc.lookupService();
+                    hwc.playService();
+                }
+            }
+        });
+
     }
     ///////////////////////////////////////////
     // Initial Setup
@@ -133,6 +139,7 @@ public class JobShopClient{
      */
     public boolean menu_login() throws RemoteException {
         System.out.println("\nAUTH:");
+        System.out.println("[0] - Teste");
         System.out.println("[1] - Registry");
         System.out.println("[2] - Login");
         System.out.println("[9] - Exit");
@@ -140,6 +147,9 @@ public class JobShopClient{
         String option = scanner.nextLine();
 
         // Registry
+        if(option.equals("0"))
+            teste();
+
         if(option.equals("1"))
             user_create();
 
@@ -156,6 +166,16 @@ public class JobShopClient{
         return false;
     }
 
+    private void teste(){
+        String username = "pedro";
+        String password = "12345";
+
+        if(!username.isEmpty() || !password.isEmpty()){
+            JWT.createJWT("null",username,password,1000000000);
+            //System.out.println(token);
+        }
+    }
+
     /*
      *  Create new user
      */
@@ -165,7 +185,6 @@ public class JobShopClient{
 
         System.out.print("Password: ");
         String password = scanner.nextLine();
-
 
         Boolean success = authRI.registry(username, password);
 
