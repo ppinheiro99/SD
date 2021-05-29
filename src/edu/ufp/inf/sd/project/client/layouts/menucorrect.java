@@ -433,7 +433,6 @@ public class menucorrect extends JFrame {
                 stringBuilder.append("<br/>Criado com sucesso!");
                 lbLabel0.setText(stringBuilder.toString());
                 ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
-
                 ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
 
                 if (jobGroupRI.getCoins() > 10) {

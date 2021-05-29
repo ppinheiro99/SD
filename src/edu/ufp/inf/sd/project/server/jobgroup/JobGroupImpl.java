@@ -109,37 +109,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             };
             channel.basicConsume(id+this.name+"_results", true, deliverCallback, consumerTag -> { });
 
-            //sendMessage(channel,this.path);
-           // Thread.currentThread().sleep(5000);
-            // Change strategy to CrossoverStrategies.TWO
-           // sendMessage(channel, String.valueOf(CrossoverStrategies.TWO.strategy));
-            //Thread.currentThread().sleep(2000);
-            // DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-              //  String message = new String(delivery.getBody(), "UTF-8");
-            //    System.out.println(" [x] Received '" + message + "'");
-
-          //  };
-
-            //channel.basicConsume(QUEUE_NAME + "_results", true, deliverCallback, consumerTag -> { });
-            // Change strategy to CrossoverStrategies.THREE
-          //  sendMessage(channel, String.valueOf(CrossoverStrategies.THREE.strategy));
-         //   Thread.currentThread().sleep(2000);
-
-            // Stop the GA
-            //sendMessage(channel, "stop");
-
         } catch (IOException | TimeoutException e) {
             Logger.getLogger(this.name).log(Level.INFO, e.toString());
-        } /* The try-with-resources will close resources automatically in reverse order
-            finally {
-            try {
-                // Lastly, we close the channel and the connection
-                if (channel != null) { channel.close(); }
-                if (connection != null) { connection.close(); }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } */
+        }
     }
 
 
@@ -150,13 +122,11 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     public void SendJobs() {
         server_says("Sending the jobs");
-
         ///Mandamos os detalhes do job a cada worker
         this.workers.forEach((id, workerRI) -> {
             try {
                 ///Antes de enviarmos jobs para cada worker temos que verificar que temos plafon suficiente.
                 if(this.coins > 10){
-                    server_says("Estou aqui caralho");
                     server_says(this.getState().getStatus());
                     if(this.getState().getStatus().compareTo("PAUSE") != 0){
                         server_says(this.getState().getStatus());
