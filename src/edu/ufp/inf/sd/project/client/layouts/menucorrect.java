@@ -514,8 +514,6 @@ public class menucorrect extends JFrame {
 
             }
 
-
-
             stringBuilder.append("<br/>Path para Ficheiro:");
             lbLabel0.setText(stringBuilder.toString());
             String path = "";
@@ -596,18 +594,7 @@ public class menucorrect extends JFrame {
             lbLabel0.setText(stringBuilder.toString());
             String id = "";
 
-
-            while (true) {
-                if(btSent.getModel().isPressed()){
-                    id = taArea0.getText();
-                    break;
-                }
-
-            }
-
-
-
-            JobGroupRI jobGroupRI = JobShopClient_static.getSessionRI().joinJobGroup(Integer.parseInt(id));
+            JobGroupRI jobGroupRI = JobShopClient_static.getSessionRI().joinJobGroup(Integer.parseInt(taArea0.getText()));
             if (jobGroupRI != null) {
                 stringBuilder.append("<br/>Criado com sucesso!");
                 lbLabel0.setText(stringBuilder.toString());
@@ -627,13 +614,9 @@ public class menucorrect extends JFrame {
                 stringBuilder.append("Erro ao adicionar worker!");
                 lbLabel0.setText(stringBuilder.toString());
             }
-
-
         } else {
             lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
         }
-
-
     }
 
     private void btDeleteexistinggroup(java.awt.event.ActionEvent evt) throws RemoteException {
@@ -696,22 +679,8 @@ public class menucorrect extends JFrame {
     }
 
     private void btAddCoins(java.awt.event.ActionEvent evt) throws RemoteException {
-        StringBuilder stringBuilder = new StringBuilder(9999);
-        stringBuilder.append("<html>DISPLAY:<br/> ADICIONA O SALDO E CLICA EM [SENT] <br/>");
-        lbLabel0.setText(stringBuilder.toString());
-        if (sessionRI_static != null) {
-            if (btSent.getModel().isPressed()) {
-                stringBuilder.append("**the button 'sent' was pressed**<br/>");
-                stringBuilder.append("#Adiconados ");
-                stringBuilder.append(Integer.parseInt(taArea0.getText()));
-                stringBuilder.append(" coins");
-                JobShopClient_static.getCoinsPayment(Integer.parseInt(taArea0.getText()));
-                lbLabel0.setText(stringBuilder.toString());
-            }
-        } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
-
-        }
+        JobShopClient_static.getCoinsPayment(Integer.parseInt(taArea0.getText()));
+        lbLabel1.setText("My Coins: " + sessionRI_static.showCoins());
     }
 /*
     private void btMyCoins(java.awt.event.ActionEvent evt) throws RemoteException {

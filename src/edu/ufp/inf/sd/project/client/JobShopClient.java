@@ -593,8 +593,6 @@ public class JobShopClient extends javax.swing.JFrame {
      */
     public void jButtonLoginActionPerformed(java.awt.event.ActionEvent evt) throws Exception {
         if (!jTextFieldUsername.getText().isEmpty() || !jTextFieldPassword.getText().isEmpty()) {
-
-
             System.out.println("#################################################################################");
             System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
             System.out.println("#################################################################################");
@@ -603,13 +601,11 @@ public class JobShopClient extends javax.swing.JFrame {
             this.sessionRI = this.authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
             if (sessionRI != null) {
                 System.out.println("Sessao iniciada com sucesso!");
-
-
+                menucorrect.menucorrect(this,args);
             } else {
                 System.out.println("Erro ao iniciar sessao!");
 
             }
-
 
             //  String token = JWT.createJWT("null",jTextFieldUsername.getText(),jTextFieldPassword.getText(),1000000000);
             // HashSessionRI session= hashFactory.login(token);

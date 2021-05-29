@@ -16,7 +16,6 @@ public class JWT {
     }*/
 
     public static void createJWT(String id, String issuer, String subject, long ttlMillis) {
-
         Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
         System.out.println(key);
 
