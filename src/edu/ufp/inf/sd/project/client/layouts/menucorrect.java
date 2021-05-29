@@ -103,7 +103,7 @@ public class menucorrect extends JFrame {
         gbPanel0.setConstraints(taArea0, gbcPanel0);
         pnPanel0.add(taArea0);
 
-        lbLabel0 = new JLabel("DISPLAY:\n\n\n\n");
+        lbLabel0 = new JLabel("DISPLAY:<br/><br/><br/><br/>");
         gbcPanel0.gridx = 0;
         gbcPanel0.gridy = 0;
         gbcPanel0.gridwidth = 21;
@@ -443,20 +443,20 @@ public class menucorrect extends JFrame {
 
     private void btListexistinggroups(java.awt.event.ActionEvent evt) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder(9999);
-        stringBuilder.append("DISPLAY:\n **List existing groups** \n");
+        stringBuilder.append("<html>DISPLAY:<br/> **List existing groups** <br/>");
         System.getProperty("line.separator");
         lbLabel0.setText(stringBuilder.toString());
         if (JobShopClient_static.getSessionRI() != null) {
 
             ArrayList<String> groups = JobShopClient_static.getSessionRI().listJobGroups();
-            stringBuilder.append("\n\t List of Groups:");
+            stringBuilder.append("<br/> List of Groups:");
             for (String name : groups) {
                 stringBuilder.append(name);
-                stringBuilder.append("\n");
+                stringBuilder.append("<br/>");
             }
             lbLabel0.setText(stringBuilder.toString());
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText("<html> ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
         }
 
 
@@ -464,21 +464,21 @@ public class menucorrect extends JFrame {
 
     private void btPauseexistinggroup(java.awt.event.ActionEvent evt) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder(9999);
-        stringBuilder.append("DISPLAY:\n **Pause existing group** \n");
+        stringBuilder.append("<html>DISPLAY:<br/> **Pause existing group** <br/>");
         lbLabel0.setText(stringBuilder.toString());
         if (JobShopClient_static.getSessionRI() != null) {
-            System.out.print("\nID do Grupo: ");
+            System.out.print("<br/>ID do Grupo: ");
             String id = "";
             if (btSent.getModel().isPressed()) {
                 id = taArea0.getText();
                 if (id.compareTo("") == 0) return;
             }
             ArrayList<String> groups = JobShopClient_static.getSessionRI().listJobGroups();
-            stringBuilder.append("\n\t List of Groups:");
+            stringBuilder.append("<br/>\t List of Groups:");
 
             for (String name : groups) {
                 stringBuilder.append(name);
-                stringBuilder.append("\n");
+                stringBuilder.append("<br/>");
             }
 
             lbLabel0.setText(stringBuilder.toString());
@@ -488,7 +488,7 @@ public class menucorrect extends JFrame {
                 jobGroupRI.setState(s);
             }
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
         }
     }
 
@@ -638,10 +638,10 @@ public class menucorrect extends JFrame {
 
     private void btDeleteexistinggroup(java.awt.event.ActionEvent evt) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder(9999);
-        stringBuilder.append("DISPLAY:\n **Delete existing groupe** \n");
+        stringBuilder.append("<html>DISPLAY:<br/> **Delete existing groupe** <br/>");
         lbLabel0.setText(stringBuilder.toString());
         if (JobShopClient_static.getSessionRI() != null) {
-            stringBuilder.append("\nNome do Grupo: ");
+            stringBuilder.append("<br/>Nome do Grupo: ");
             lbLabel0.setText(stringBuilder.toString());
             String name = "";
             if (btSent.getModel().isPressed()) {
@@ -652,22 +652,22 @@ public class menucorrect extends JFrame {
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
             JobShopClient_static.getSessionRI().deleteJobGroup(Integer.parseInt(name));
 
-            stringBuilder.append("\nJobGroup apagado com sucesso!");
+            stringBuilder.append("<br/>JobGroup apagado com sucesso!");
             lbLabel0.setText(stringBuilder.toString());
 
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
         }
 
     }
 
     private void btContinueexistinggroup(java.awt.event.ActionEvent evt) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder(9999);
-        stringBuilder.append("DISPLAY:\n **Continue existing groupe** \n");
+        stringBuilder.append("<html>DISPLAY:<br/> **Continue existing groupe** <br/>");
         lbLabel0.setText(stringBuilder.toString());
 
         if (JobShopClient_static.getSessionRI() != null) {
-            stringBuilder.append("\nID do Grupo: ");
+            stringBuilder.append("<br/>ID do Grupo: ");
             lbLabel0.setText(stringBuilder.toString());
             String id = "";
             if (btSent.getModel().isPressed()) {
@@ -676,11 +676,11 @@ public class menucorrect extends JFrame {
             }
 
             ArrayList<String> groups = JobShopClient_static.getSessionRI().listJobGroups();
-            stringBuilder.append("\n\t List of Groups:");
+            stringBuilder.append("<br/>\t List of Groups:");
 
             for (String name : groups) {
                 stringBuilder.append(name);
-                stringBuilder.append("\n");
+                stringBuilder.append("<br/>");
             }
 
             lbLabel0.setText(stringBuilder.toString());
@@ -690,18 +690,18 @@ public class menucorrect extends JFrame {
                 jobGroupRI.setState(s);
             }
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
 
         }
     }
 
     private void btAddCoins(java.awt.event.ActionEvent evt) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder(9999);
-        stringBuilder.append("DISPLAY:\n ADICIONA O SALDO E CLICA EM [SENT] \n");
+        stringBuilder.append("<html>DISPLAY:<br/> ADICIONA O SALDO E CLICA EM [SENT] <br/>");
         lbLabel0.setText(stringBuilder.toString());
         if (sessionRI_static != null) {
             if (btSent.getModel().isPressed()) {
-                stringBuilder.append("**the button 'sent' was pressed**\n");
+                stringBuilder.append("**the button 'sent' was pressed**<br/>");
                 stringBuilder.append("#Adiconados ");
                 stringBuilder.append(Integer.parseInt(taArea0.getText()));
                 stringBuilder.append(" coins");
@@ -709,7 +709,7 @@ public class menucorrect extends JFrame {
                 lbLabel0.setText(stringBuilder.toString());
             }
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
 
         }
     }
@@ -717,18 +717,18 @@ public class menucorrect extends JFrame {
     private void btMyCoins(java.awt.event.ActionEvent evt) throws RemoteException {
         if (sessionRI_static != null) {
 
-            lbLabel0.setText("DISPLAY: \n\t My Coins: " + sessionRI_static.showCoins());
+            lbLabel0.setText("DISPLAY: <br/>\t My Coins: " + sessionRI_static.showCoins());
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
         }
     }
 
     private void btMyuser(ActionEvent evt) throws RemoteException {
         if (sessionRI_static != null) {
 
-            lbLabel0.setText("DISPLAY: \n\t My username: " + sessionRI_static.showMyUsername());
+            lbLabel0.setText("DISPLAY: <br/>\t My username: " + sessionRI_static.showMyUsername());
         } else {
-            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
         }
 
 
