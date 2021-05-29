@@ -603,7 +603,7 @@ public class JobShopClient extends javax.swing.JFrame {
             this.sessionRI = this.authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
             if (sessionRI != null) {
                 System.out.println("Sessao iniciada com sucesso!");
-                menucorrect.menucorrect(this,args);
+
 
             } else {
                 System.out.println("Erro ao iniciar sessao!");
