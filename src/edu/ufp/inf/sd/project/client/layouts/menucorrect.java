@@ -575,15 +575,15 @@ public class menucorrect extends JFrame {
                     lbLabel0.setText("Plafon é superior ao saldo!");
                 }
             }
-
+            stringBuilder.append("</html>");
+            lbLabel0.setText(stringBuilder.toString());
 
         } else {
             lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
 
         }
 
-        stringBuilder.append("</html>");
-        lbLabel0.setText(stringBuilder.toString());
+
 
     }
 
