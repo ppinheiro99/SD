@@ -6,22 +6,31 @@ import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.project.util.jwt.JWT;
+import edu.ufp.inf.sd.project.client.layouts.menucorrect;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 
+import java.awt.*;
 import java.io.IOException;
+import java.lang.module.FindException;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.mail.Session;
+import javax.swing.*;
+
+import static javax.swing.GroupLayout.Alignment.*;
 
 
-public class JobShopClient{
+public class JobShopClient extends javax.swing.JFrame {
 
+    private String[] args;
     private SetupContextRMI contextRMI;
     private JobGroupRI jobGroupRI;
     private Scanner scanner;
@@ -29,36 +38,94 @@ public class JobShopClient{
     private AuthFactoryRI authRI;
     private UserSessionRI sessionRI;
 
-    ///////////////////////////////////////////
-    // Main
-    public static void main(String[] args) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                if (args != null && args.length < 2) {
-                    System.exit(-1);
-                } else {
-                    JobShopClient hwc=new JobShopClient(args);
-                    hwc.lookupService();
-                    hwc.playService();
-                }
-            }
-        });
+    /**
+     * Parte Grafica
+     **/
+    private javax.swing.JLabel jLabelUserName;
+    private javax.swing.JLabel jLabelPassword;
+    private javax.swing.JTextField jTextFieldUsername;
+    private javax.swing.JTextField jTextFieldPassword;
+    private javax.swing.JButton jButtonLogin;
+    private javax.swing.JButton jButtonRegistry;
+    private javax.swing.JScrollPane jScrollPane1;
 
+    public UserSessionRI getSessionRI() {
+        return sessionRI;
     }
+
+    public JobGroupRI getJobGroupRI() {
+        return jobGroupRI;
+    }
+
+    public void setJobGroupRI(JobGroupRI jobGroupRI) {
+        this.jobGroupRI = jobGroupRI;
+    }
+
     ///////////////////////////////////////////
     // Initial Setup
     public JobShopClient(String[] args) {
         try {
+
             String registryIP = args[0];
             String registryPort = args[1];
             String serviceName = args[2];
+            this.args = args;
+            this.args[0] = registryIP;
+            this.args[1] = registryPort;
+            this.args[2] = serviceName;
+
+            System.out.println("#################################################################################");
+            System.out.println("###############" + Arrays.toString(this.args) + "###############");
+            System.out.println("#################################################################################");
+
+            //1. Init the GUI components
+            initComponents();
+            //2. Init the RMI context (load security manager, lookup subject, etc.)
             contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
 
         } catch (RemoteException e) {
             Logger.getLogger(JobShopClient.class.getName()).log(Level.SEVERE, null, e);
         }
+
     }
+
+
+    ///////////////////////////////////////////
+    // Main
+    public static void main(String[] args) {
+      /*  if (args != null && args.length < 2) {
+            System.exit(-1);
+        } else {
+            JobShopClient hwc=new JobShopClient(args);
+            hwc.lookupService();
+            hwc.playService();
+        }*/
+        java.awt.EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                if (args.length >= 0) {
+
+
+                    try {
+                        UIManager.setLookAndFeel(
+                                "javax.swing.plaf.metal.MetalLookAndFeel");
+                        //  "com.sun.java.swing.plaf.motif.MotifLookAndFeel");
+                        //UIManager.getCrossPlatformLookAndFeelClassName());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+
+
+                    new JobShopClient(args).setVisible(true);
+                } else {
+                    System.out.println(JobShopClient.class + ": call must have the following args: <rmi_ip> <rmi_port> <rmi_service_prefix>");
+                }
+            }
+        });
+    }
+
+
     ///////////////////////////////////////////
     // RMI Register
     // jobShopRI = (JobShopRI) registry.lookup(serviceUrl);
@@ -85,23 +152,23 @@ public class JobShopClient{
 
         this.scanner = new Scanner(System.in);
 
-        while(true) {
+        while (true) {
             try {
 
                 // Login Menu
-                if(! this.isLoggedIn)
+                if (!this.isLoggedIn)
                     isLoggedIn = menu_login();
                     // Methods Menu
                 else
                     menu_session();
 
-                    // Methods Menu
+                // Methods Menu
                 //else {
 
-                    // menu_session();
+                // menu_session();
 
 
-                    //============ Call TS remote service ============
+                //============ Call TS remote service ============
                     /*
                     String jsspInstancePath = "edu/ufp/inf/sd/project/data/la01.txt";
                     int makespan = this.jobShopRI.runTS(jsspInstancePath);
@@ -121,7 +188,7 @@ public class JobShopClient{
                     ga.run();
                     */
 
-              //  }
+                //  }
 
             } catch (RemoteException ex) {
                 Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
@@ -154,11 +221,11 @@ public class JobShopClient{
             user_create();
 
         // Login
-        if(option.equals("2"))
+        if (option.equals("2"))
             return user_login();
 
         // Exit
-        if(option.equals("9"))
+        if (option.equals("9"))
             System.exit(1);
 
 
@@ -177,7 +244,7 @@ public class JobShopClient{
     }
 
     /*
-     *  Create new user
+     *  Create new user registo
      */
     private void user_create() throws RemoteException {
         System.out.print("Username: ");
@@ -188,11 +255,12 @@ public class JobShopClient{
 
         Boolean success = authRI.registry(username, password);
 
-        if(success)
+        if (success)
             System.out.println("User criado com sucesso!");
         else
             System.out.println("Erro ao criar um usuario!");
     }
+
 
     /*
      *  Login user
@@ -207,11 +275,10 @@ public class JobShopClient{
 
         sessionRI = authRI.login(username, password);
 
-        if(sessionRI != null){
+        if (sessionRI != null) {
             System.out.println("Sessao iniciada com sucesso!");
             return true;
-        }
-        else {
+        } else {
             System.out.println("Erro ao iniciar sessao!");
             return false;
         }
@@ -291,10 +358,7 @@ public class JobShopClient{
         }
 
 
-
-
     }
-
 
 
     private void add_coins() throws RemoteException {
@@ -322,7 +386,7 @@ public class JobShopClient{
     /*
      *  User Logout
      */
-    private void user_logout() throws RemoteException {
+    public void user_logout() throws RemoteException {
         if (this.sessionRI != null) {
             this.sessionRI.logout();
             this.sessionRI = null;
@@ -332,7 +396,7 @@ public class JobShopClient{
 
     ///Create JobGroup
 
-    private void jobgroup_create() throws IOException, TimeoutException {
+    public void jobgroup_create() throws IOException, TimeoutException {
         if (this.sessionRI != null) {
             System.out.print("\nNome do Grupo: ");
             String name = scanner.nextLine();
@@ -342,25 +406,25 @@ public class JobShopClient{
             String plafon = scanner.nextLine();
             System.out.println("\nEstrategia para o JobGroup (ts ou ga):");
             String strat = scanner.nextLine();
-            if(strat.compareTo("ts")==0 || strat.compareTo("ga")==0){
+            if (strat.compareTo("ts") == 0 || strat.compareTo("ga") == 0) {
                 //String path = "edu/ufp/inf/sd/project/data/la04.txt";
                 ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
-                if(Integer.parseInt(plafon) < sessionRI.showCoins()){
-                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),path,strat);
+                if (Integer.parseInt(plafon) < sessionRI.showCoins()) {
+                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon), path, strat);
                     //tira ao saldo o plafon para o jobgroup
                     this.getCoinsPayment(-Integer.parseInt(plafon));
                     if (jobGroupRI != null) {
-                        if(jobGroupRI.getCoins() == 10){
-                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                        if (jobGroupRI.getCoins() == 10) {
+                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI, this);
                             jobGroupRI.verify_winner();
-                        }else{
-                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                        } else {
+                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI, this);
                         }
 
                     } else {
                         System.out.println("Erro ao criar grupo?");
                     }
-                }else {
+                } else {
                     System.out.println("Plafon é superior ao saldo!");
                 }
             }
@@ -373,7 +437,7 @@ public class JobShopClient{
     /*
      *  Ask and pause one job group
      */
-    private void jobgroup_list() throws RemoteException {
+    public void jobgroup_list() throws RemoteException {
         if (this.sessionRI != null) {
 
             ArrayList<String> groups = this.sessionRI.listJobGroups();
@@ -386,7 +450,7 @@ public class JobShopClient{
     /*
      *  Ask and list all job groups
      */
-    private void pause_job_group() throws RemoteException {
+    public void pause_job_group() throws RemoteException {
         if (this.sessionRI != null) {
             System.out.print("\nID do Grupo: ");
             String id = scanner.nextLine();
@@ -396,7 +460,7 @@ public class JobShopClient{
                 System.out.println(name);
 
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if(jobGroupRI!=null){
+            if (jobGroupRI != null) {
                 GroupStatusState s = new GroupStatusState("PAUSE");
                 jobGroupRI.setState(s);
             }
@@ -406,29 +470,29 @@ public class JobShopClient{
     /*
      *  Add worker to jobgroup
      */
-    private void jobgroup_add_worker() throws IOException, TimeoutException {
+    public void jobgroup_add_worker() throws IOException, TimeoutException {
         if (this.sessionRI != null) {
 
             System.out.println("ID do Grupo: ");
             String id = scanner.nextLine();
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if(jobGroupRI != null) {
-                    System.out.println("Criado com sucesso!");
-                    ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
+            if (jobGroupRI != null) {
+                System.out.println("Criado com sucesso!");
+                ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
 
-                    ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
+                ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
 
-                    if(jobGroupRI.getCoins() > 10){
-                        new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
+                if (jobGroupRI.getCoins() > 10) {
+                    new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI, this);
 
-                    }else if (jobGroupRI.getCoins() == 10){
-                        //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
-                            jobGroupRI.verify_winner();
-                    }
-
-                }else {
-                    System.out.println("Erro ao adicionar worker!");
+                } else if (jobGroupRI.getCoins() == 10) {
+                    //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
+                    jobGroupRI.verify_winner();
                 }
+
+            } else {
+                System.out.println("Erro ao adicionar worker!");
+            }
 
 
         }
@@ -446,7 +510,7 @@ public class JobShopClient{
         }
     }
 
-    private void continue_jobgroup() throws RemoteException {
+    public void continue_jobgroup() throws RemoteException {
         if (this.sessionRI != null) {
             System.out.print("\nID do Grupo: ");
             String id = scanner.nextLine();
@@ -456,7 +520,7 @@ public class JobShopClient{
                 System.out.println(name);
 
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if(jobGroupRI!=null){
+            if (jobGroupRI != null) {
                 GroupStatusState s = new GroupStatusState("CONTINUE");
                 jobGroupRI.setState(s);
             }
@@ -468,9 +532,181 @@ public class JobShopClient{
     }
 
     public void getCoinsPayment(Integer coins) throws RemoteException {
-        if(this.sessionRI!=null){
+        if (this.sessionRI != null) {
             sessionRI.addCoins(coins);
         }
     }
 
+    //###############################################################################
+    //#############################  Interface Grafica  ################################################
+    //################################################################################
+    //##############################################################################
+    /*
+     *  Gui
+     */
+
+    /**
+     * Create new user
+     *
+     * @param evt evento relativo ao carregar no butão
+     */
+    public void jButtonRegistryActionPerformed(java.awt.event.ActionEvent evt) throws RemoteException {
+        if (!jLabelUserName.getText().isEmpty() || !jLabelPassword.getText().isEmpty()) {
+
+            System.out.println("#################################################################################");
+            System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
+            System.out.println("#################################################################################");
+
+
+            System.out.println(jLabelUserName.getText() + jLabelPassword.getText());
+            //*******   String token = JWT.createJWT("null",jTextFieldUsername.getText(),jTextFieldPassword.getText(),1000000000);
+            Boolean success = authRI.registry(jLabelUserName.getText(), jLabelPassword.getText());
+
+
+            if (success) {
+                JobShopClient.main(this.args);
+                this.setVisible(false);
+            } else {
+                System.out.println("Tem de se autenticar");
+            }
+        } else {
+            System.out.println("Preencha todos os campos");
+        }
+
+    }
+
+    /**
+     * Fazer login do cliente
+     *
+     * @param evt evento relativo ao carregar no butão
+     * @throws Exception
+     */
+    public void jButtonLoginActionPerformed(java.awt.event.ActionEvent evt) throws Exception {
+        if (!jTextFieldUsername.getText().isEmpty() || !jTextFieldPassword.getText().isEmpty()) {
+
+
+            System.out.println("#################################################################################");
+            System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
+            System.out.println("#################################################################################");
+
+
+            this.sessionRI = authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
+            if (sessionRI != null) {
+                System.out.println("Sessao iniciada com sucesso!");
+                menucorrect.menucorrect(this,args);
+
+            } else {
+                System.out.println("Erro ao iniciar sessao!");
+
+            }
+
+
+            //  String token = JWT.createJWT("null",jTextFieldUsername.getText(),jTextFieldPassword.getText(),1000000000);
+            // HashSessionRI session= hashFactory.login(token);
+            if (sessionRI != null) {
+                JobShopClient.main(this.args);
+                this.setVisible(false);
+            } else {
+                System.out.println("Tem de se autenticar");
+            }
+        } else {
+            System.out.println("Preencha todos os campos");
+        }
+    }
+
+
+    public void initComponents() {
+
+        /**
+         * Inicializar as variáveis
+         */
+        jScrollPane1 = new javax.swing.JScrollPane();
+
+        jButtonLogin = new javax.swing.JButton();
+        jButtonRegistry = new javax.swing.JButton();
+
+        jTextFieldUsername = new javax.swing.JTextField();
+        jTextFieldPassword = new javax.swing.JTextField();
+
+        jLabelUserName = new javax.swing.JLabel();
+        jLabelPassword = new javax.swing.JLabel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        /**
+         * Atribuir textos e respetivas funções às labels e butões
+         */
+        jButtonLogin.setText("Login");
+        jButtonLogin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                try {
+                    jButtonLoginActionPerformed(evt);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        jButtonRegistry.setText("Registry");
+        jButtonRegistry.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                try {
+                    jButtonRegistryActionPerformed(evt);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        jTextFieldUsername.setText("username");
+        jTextFieldPassword.setText("password");
+        jLabelUserName.setText("Username");
+        jLabelPassword.setText("Password:");
+
+        /**
+         * Parte gráfica
+         */
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                                .addComponent(jLabelUserName)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(jTextFieldUsername, javax.swing.GroupLayout.DEFAULT_SIZE, 141, Short.MAX_VALUE)
+                                                .addComponent(jLabelPassword)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(jTextFieldPassword, javax.swing.GroupLayout.DEFAULT_SIZE, 141, Short.MAX_VALUE))
+                                )
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonLogin)
+                                .addComponent(jButtonRegistry)
+
+                        )
+        );
+        layout.setVerticalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 246, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonLogin)
+                                        .addComponent(jButtonRegistry)
+                                )
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabelUserName)
+                                        .addComponent(jTextFieldUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabelPassword)
+                                        .addComponent(jTextFieldPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        pack();
+    }
 }
+
+
