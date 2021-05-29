@@ -156,10 +156,15 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             try {
                 ///Antes de enviarmos jobs para cada worker temos que verificar que temos plafon suficiente.
                 if(this.coins > 10){
-                    //Enviamos o job e ele executa
-                    //Falta adicionar ao saldo do user!!!!!
-                    this.coins--;
-                    workerRI.receiveJob(this.groupInfoState);
+                    server_says("Estou aqui caralho");
+                    server_says(this.getState().getStatus());
+                    if(this.getState().getStatus().compareTo("PAUSE") != 0){
+                        server_says(this.getState().getStatus());
+                        //Enviamos o job e ele executa
+                        //Falta adicionar ao saldo do user!!!!!
+                        this.coins--;
+                        workerRI.receiveJob(this.groupInfoState);
+                    }
                 }else {
                     ///Entra aqui assim que as coins forem 10 , verificamos quem tem a melhor solução
                     verify_winner();

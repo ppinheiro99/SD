@@ -60,7 +60,6 @@ public class createJobGroupLayout extends JFrame {
       main(args);
    }
 
-
    public static void main(String args[]) {
       try {
          UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
@@ -71,8 +70,6 @@ public class createJobGroupLayout extends JFrame {
       }
       thecreateJobGroupLayout = new createJobGroupLayout();
    }
-
-
    /**
     *
     */
@@ -85,7 +82,7 @@ public class createJobGroupLayout extends JFrame {
       GridBagConstraints gbcPanel0 = new GridBagConstraints();
       pnPanel0.setLayout(gbPanel0);
 
-      lbLabelEstrategia = new JLabel("Estrategia");
+      lbLabelEstrategia = new JLabel("Estrategia para o JobGroup (ts ou ga):");
       gbcPanel0.gridx = 0;
       gbcPanel0.gridy = 2;
       gbcPanel0.gridwidth = 1;
@@ -211,7 +208,6 @@ public class createJobGroupLayout extends JFrame {
 
 
    private void btSent(java.awt.event.ActionEvent evt) throws IOException, TimeoutException {
-
       if (tfTextCoins.getText().compareTo("") != 0 && tfTextEst.getText().compareTo("") != 0 && tfTextName.getText().compareTo("") != 0 && tfTextPath.getText().compareTo("") != 0) {
          if (tfTextEst.getText().compareTo("ts") == 0 || tfTextEst.getText().compareTo("ga") == 0) {
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
@@ -223,15 +219,14 @@ public class createJobGroupLayout extends JFrame {
                   if (JobShopClient_static.getJobGroupRI().getCoins() == 10) {
                      WorkerImpl worker = new WorkerImpl(sessionRI_static.showMyUsername(), JobShopClient_static.getJobGroupRI(), JobShopClient_static);
                      JobShopClient_static.getJobGroupRI().verify_winner();
+                     dispose(); //sair da janela
                   } else {
                      WorkerImpl worker = new WorkerImpl(sessionRI_static.showMyUsername(), JobShopClient_static.getJobGroupRI(), JobShopClient_static);
+                     dispose(); //sair da janela
                   }
-
                }
             }
-
          }
       }
-      dispose(); //sair da janela
    }
 }

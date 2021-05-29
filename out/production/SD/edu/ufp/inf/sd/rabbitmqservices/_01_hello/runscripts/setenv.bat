@@ -15,7 +15,7 @@
 @Set USERNAME=Samuel Mota
 
 @Set WORKDRIVE=C
-@Set JDK=C:\Program Files\Java\openjdk-16.0.1
+@Set JDK=C:/Program Files/Java/openjdk-16.0.1
 @Set NETBEANS=NetBeans
 @Set INTELLIJ=IntelliJ
 @Set CURRENT_IDE=%INTELLIJ%
@@ -24,7 +24,7 @@
 
 @REM ==== JAVA NAMING STUFF ====
 @Set JAVAPROJ_NAME=SDProject
-@set JAVAPROJ=C:\SD\SDProject
+@set JAVAPROJ=C:/SD/SDProject
 @Set RABBITMQ_SERVICES_FOLDER=edu/ufp/inf/sd/rabbitmqservices
 @Set RABBITMQ_SERVICES_PACKAGE=edu.ufp.inf.sd.rabbitmqservices
 @Set PACKAGE=_01_hello

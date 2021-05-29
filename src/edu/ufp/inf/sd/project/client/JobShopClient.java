@@ -7,13 +7,9 @@ import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.project.util.jwt.JWT;
 import edu.ufp.inf.sd.project.client.layouts.menucorrect;
-import edu.ufp.inf.sd.rmi._04_diglib.client.DigLibClient;
-import edu.ufp.inf.sd.rmi._05_observer.server.SubjectRI;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 
-import java.awt.*;
 import java.io.IOException;
-import java.lang.module.FindException;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -24,11 +20,7 @@ import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.mail.Session;
 import javax.swing.*;
-
-import static javax.swing.GroupLayout.Alignment.*;
-
 
 public class JobShopClient extends javax.swing.JFrame {
 
@@ -108,7 +100,6 @@ public class JobShopClient extends javax.swing.JFrame {
         }
     }
 
-
     ///////////////////////////////////////////
     // Main
     public static void main(String[] args) {
@@ -120,8 +111,6 @@ public class JobShopClient extends javax.swing.JFrame {
                     try {
                         UIManager.setLookAndFeel(
                                 "javax.swing.plaf.metal.MetalLookAndFeel");
-                        //  "com.sun.java.swing.plaf.motif.MotifLookAndFeel");
-                        //UIManager.getCrossPlatformLookAndFeelClassName());
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -136,7 +125,6 @@ public class JobShopClient extends javax.swing.JFrame {
             }
         });
     }
-
 
     ///////////////////////////////////////////
     // RMI Register
@@ -173,34 +161,6 @@ public class JobShopClient extends javax.swing.JFrame {
                     // Methods Menu
                 else
                     menu_session();
-
-                // Methods Menu
-                //else {
-
-                // menu_session();
-
-
-                //============ Call TS remote service ============
-                    /*
-                    String jsspInstancePath = "edu/ufp/inf/sd/project/data/la01.txt";
-                    int makespan = this.jobShopRI.runTS(jsspInstancePath);
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO,
-                            "[TS] Makespan for {0} = {1}",
-                            new Object[]{jsspInstancePath, String.valueOf(makespan)});
-
-
-                    //============ Call GA ============
-                    String queue = "jssp_ga";
-                    String resultsQueue = queue + "_results";
-                    CrossoverStrategies strategy = CrossoverStrategies.ONE;
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO,
-                            "GA is running for {0}, check queue {1}",
-                            new Object[]{jsspInstancePath, resultsQueue});
-                    GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(jsspInstancePath, queue, strategy);
-                    ga.run();
-                    */
-
-                //  }
 
             } catch (RemoteException ex) {
                 Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
@@ -272,7 +232,6 @@ public class JobShopClient extends javax.swing.JFrame {
         else
             System.out.println("Erro ao criar um usuario!");
     }
-
 
     /*
      *  Login user
@@ -368,8 +327,6 @@ public class JobShopClient extends javax.swing.JFrame {
         if (option.equals("8")) {
             continue_jobgroup();
         }
-
-
     }
 
 
@@ -407,7 +364,6 @@ public class JobShopClient extends javax.swing.JFrame {
     }
 
     ///Create JobGroup
-
     public void jobgroup_create() throws IOException, TimeoutException {
         if (this.sessionRI != null) {
             System.out.print("\nNome do Grupo: ");
@@ -440,8 +396,6 @@ public class JobShopClient extends javax.swing.JFrame {
                     System.out.println("Plafon é superior ao saldo!");
                 }
             }
-
-
         }
     }
 
@@ -501,12 +455,9 @@ public class JobShopClient extends javax.swing.JFrame {
                     //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
                     jobGroupRI.verify_winner();
                 }
-
             } else {
                 System.out.println("Erro ao adicionar worker!");
             }
-
-
         }
     }
 
@@ -606,9 +557,6 @@ public class JobShopClient extends javax.swing.JFrame {
                 System.out.println("Erro ao iniciar sessao!");
 
             }
-
-            //  String token = JWT.createJWT("null",jTextFieldUsername.getText(),jTextFieldPassword.getText(),1000000000);
-            // HashSessionRI session= hashFactory.login(token);
             if (sessionRI != null) {
                 JobShopClient.main(this.args);
                 this.setVisible(false);
@@ -710,7 +658,6 @@ public class JobShopClient extends javax.swing.JFrame {
                                         .addComponent(jTextFieldPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-
         pack();
     }
 }

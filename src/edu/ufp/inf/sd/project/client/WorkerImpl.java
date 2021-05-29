@@ -41,11 +41,7 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         this.jobs = j;
         this.groupInfoState = this.jobGroupRI.attach(this);
 
-
-    //rabbito();
         testerabbit();
-
-
     }
     public static void main(String[] args){}
 
@@ -93,18 +89,6 @@ public void testerabbit() throws IOException, TimeoutException {
             //channel.queueDeclare(Producer.QUEUE_NAME, true, false, false, null);
             System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
-            /* The server pushes messages asynchronously, hence we provide a
-            DefaultConsumer callback that will buffer the messages until we're ready to use them.
-            Consumer client = new DefaultConsumer(channel) {
-                @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                    String message=new String(body, "UTF-8");
-                    System.out.println(" [x] Received '" + message + "'");
-                }
-            };
-            channel.basicConsume(Producer.QUEUE_NAME, true, client    );
-            */
-
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + message + "'");
@@ -112,18 +96,15 @@ public void testerabbit() throws IOException, TimeoutException {
                 System.out.println(message + " " + resultsQueue + " " + CrossoverStrategies.ONE);
                 algoritmo(message,resultsQueue);
             };
-
             channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> { });
 
         } catch (Exception e){
-            //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());
             e.printStackTrace();
         }
     }
     public void algoritmo(String message,  String qeue ){
         GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(message,qeue,CrossoverStrategies.TWO);
         ga.run();
-
     }
 
     public String getUser() {
@@ -160,8 +141,6 @@ public void testerabbit() throws IOException, TimeoutException {
      * Process and do the job received from jobGroup.
      */
     private int processJob(String jsspInstancePath) throws IOException {
-
-
         TabuSearchJSSP ts = new TabuSearchJSSP(jsspInstancePath);
         int makespan = ts.run();
 
