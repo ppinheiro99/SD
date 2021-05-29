@@ -21,6 +21,7 @@ import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.mail.Session;
 import javax.swing.*;
 
 import static javax.swing.GroupLayout.Alignment.*;
@@ -47,6 +48,17 @@ public class JobShopClient extends javax.swing.JFrame {
     private javax.swing.JButton jButtonRegistry;
     private javax.swing.JScrollPane jScrollPane1;
 
+    public UserSessionRI getSessionRI() {
+        return sessionRI;
+    }
+
+    public JobGroupRI getJobGroupRI() {
+        return jobGroupRI;
+    }
+
+    public void setJobGroupRI(JobGroupRI jobGroupRI) {
+        this.jobGroupRI = jobGroupRI;
+    }
 
     ///////////////////////////////////////////
     // Initial Setup
@@ -360,7 +372,7 @@ public class JobShopClient extends javax.swing.JFrame {
     /*
      *  User Logout
      */
-    private void user_logout() throws RemoteException {
+    public void user_logout() throws RemoteException {
         if (this.sessionRI != null) {
             this.sessionRI.logout();
             this.sessionRI = null;
@@ -370,7 +382,7 @@ public class JobShopClient extends javax.swing.JFrame {
 
     ///Create JobGroup
 
-    private void jobgroup_create() throws IOException, TimeoutException {
+    public void jobgroup_create() throws IOException, TimeoutException {
         if (this.sessionRI != null) {
             System.out.print("\nNome do Grupo: ");
             String name = scanner.nextLine();
@@ -411,7 +423,7 @@ public class JobShopClient extends javax.swing.JFrame {
     /*
      *  Ask and pause one job group
      */
-    private void jobgroup_list() throws RemoteException {
+    public void jobgroup_list() throws RemoteException {
         if (this.sessionRI != null) {
 
             ArrayList<String> groups = this.sessionRI.listJobGroups();
@@ -424,7 +436,7 @@ public class JobShopClient extends javax.swing.JFrame {
     /*
      *  Ask and list all job groups
      */
-    private void pause_job_group() throws RemoteException {
+    public void pause_job_group() throws RemoteException {
         if (this.sessionRI != null) {
             System.out.print("\nID do Grupo: ");
             String id = scanner.nextLine();
@@ -444,7 +456,7 @@ public class JobShopClient extends javax.swing.JFrame {
     /*
      *  Add worker to jobgroup
      */
-    private void jobgroup_add_worker() throws IOException, TimeoutException {
+    public void jobgroup_add_worker() throws IOException, TimeoutException {
         if (this.sessionRI != null) {
 
             System.out.println("ID do Grupo: ");
@@ -484,7 +496,7 @@ public class JobShopClient extends javax.swing.JFrame {
         }
     }
 
-    private void continue_jobgroup() throws RemoteException {
+    public void continue_jobgroup() throws RemoteException {
         if (this.sessionRI != null) {
             System.out.print("\nID do Grupo: ");
             String id = scanner.nextLine();
@@ -524,7 +536,7 @@ public class JobShopClient extends javax.swing.JFrame {
      *
      * @param evt evento relativo ao carregar no butão
      */
-    private void jButtonRegistryActionPerformed(java.awt.event.ActionEvent evt) throws RemoteException {
+    public void jButtonRegistryActionPerformed(java.awt.event.ActionEvent evt) throws RemoteException {
         if (!jLabelUserName.getText().isEmpty() || !jLabelPassword.getText().isEmpty()) {
 
             System.out.println("#################################################################################");
@@ -555,7 +567,7 @@ public class JobShopClient extends javax.swing.JFrame {
      * @param evt evento relativo ao carregar no butão
      * @throws Exception
      */
-    private void jButtonLoginActionPerformed(java.awt.event.ActionEvent evt) throws Exception {
+    public void jButtonLoginActionPerformed(java.awt.event.ActionEvent evt) throws Exception {
         if (!jTextFieldUsername.getText().isEmpty() || !jTextFieldPassword.getText().isEmpty()) {
 
 
@@ -563,14 +575,15 @@ public class JobShopClient extends javax.swing.JFrame {
             System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
             System.out.println("#################################################################################");
 
-           menucorrect.main(args);
-            //  mainSession(args);
+            menucorrect.menucorrect(this,args);
+
 
             System.out.println("chegou aqui");
 
             this.sessionRI = authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
             if (sessionRI != null) {
                 System.out.println("Sessao iniciada com sucesso!");
+               // menucorrect.main(args,sessionRI);
 
             } else {
                 System.out.println("Erro ao iniciar sessao!");
@@ -592,7 +605,7 @@ public class JobShopClient extends javax.swing.JFrame {
     }
 
 
-    private void initComponents() {
+    public void initComponents() {
 
         /**
          * Inicializar as variáveis

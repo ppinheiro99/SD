@@ -4,7 +4,14 @@ package edu.ufp.inf.sd.project.client.layouts;//================================
 //======================================================
 
 import edu.ufp.inf.sd.project.client.JobShopClient;
+import edu.ufp.inf.sd.project.client.WorkerImpl;
+import edu.ufp.inf.sd.project.server.auth.AuthFactoryImpl;
+import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
+import edu.ufp.inf.sd.project.server.session.UserSessionRI;
+import edu.ufp.inf.sd.project.server.states.GroupStatusState;
+import edu.ufp.inf.sd.project.server.user.User;
 
+import javax.mail.Session;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -13,7 +20,11 @@ import javax.swing.BorderFactory;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 import javax.swing.JTextArea;
 import javax.swing.JLabel;
 import javax.swing.JButton;
@@ -39,12 +50,20 @@ public class menucorrect extends JFrame {
     JButton btMyCoins;
     JButton btListUsers;
     JButton btLogout;
+    JButton btMyuser;
 
-    //private JobShopClient jobShopClient = new JobShopClient(args);
+    private static UserSessionRI sessionRI_static;
+    private static JobShopClient JobShopClient_static;
 
     /**
      *
      */
+    public static void menucorrect(JobShopClient JobShopClient, String args[]) {
+        JobShopClient_static = JobShopClient;
+        sessionRI_static = JobShopClient_static.getSessionRI();
+        main(args);
+    }
+
     public static void main(String args[]) {
 
         try {
@@ -55,6 +74,7 @@ public class menucorrect extends JFrame {
         } catch (UnsupportedLookAndFeelException e) {
         }
         themenucorrect = new menucorrect();
+
     }
 
     /**
@@ -174,7 +194,7 @@ public class menucorrect extends JFrame {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 try {
                     btCreateGroupandattachworker(evt);
-                } catch (RemoteException e) {
+                } catch (IOException | TimeoutException e) {
                     e.printStackTrace();
                 }
             }
@@ -195,7 +215,7 @@ public class menucorrect extends JFrame {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 try {
                     btAttachworkertogroup(evt);
-                } catch (RemoteException e) {
+                } catch (IOException | TimeoutException e) {
                     e.printStackTrace();
                 }
             }
@@ -288,6 +308,27 @@ public class menucorrect extends JFrame {
             }
         });
 
+        btMyuser = new JButton("My user");
+        gbcPanel0.gridx = 18;
+        gbcPanel0.gridy = 12;
+        gbcPanel0.gridwidth = 3;
+        gbcPanel0.gridheight = 2;
+        gbcPanel0.fill = GridBagConstraints.BOTH;
+        gbcPanel0.weightx = 1;
+        gbcPanel0.weighty = 0;
+        gbcPanel0.anchor = GridBagConstraints.NORTH;
+        gbPanel0.setConstraints(btMyuser, gbcPanel0);
+        pnPanel0.add(btMyuser);
+        btMyuser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                try {
+                    btMyuser(evt);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
 
         btListUsers = new JButton("List Users");
         gbcPanel0.gridx = 18;
@@ -300,7 +341,6 @@ public class menucorrect extends JFrame {
         gbcPanel0.anchor = GridBagConstraints.NORTH;
         gbPanel0.setConstraints(btListUsers, gbcPanel0);
         pnPanel0.add(btListUsers);
-
         btListUsers.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 try {
@@ -339,12 +379,15 @@ public class menucorrect extends JFrame {
         pack();
         setVisible(true);
     }
-/***************************************fUNCOES****************************************************************/
+
+
+    /***************************************fUNCOES****************************************************************/
     private void pnPanel0(java.awt.event.ActionEvent evt) throws RemoteException {
         taArea0.setText("empresa de chouriças");
     }
 
     private void taArea0(java.awt.event.ActionEvent evt) throws RemoteException {
+
     }
 
     private void lbLabel0(java.awt.event.ActionEvent evt) throws RemoteException {
@@ -354,33 +397,291 @@ public class menucorrect extends JFrame {
     }
 
     private void btListexistinggroups(java.awt.event.ActionEvent evt) throws RemoteException {
+        StringBuilder stringBuilder = new StringBuilder(9999);
+        stringBuilder.append("DISPLAY:\n **List existing groups** \n");
+        lbLabel0.setText(stringBuilder.toString());
+        if (JobShopClient_static.getSessionRI() != null) {
+
+            ArrayList<String> groups = JobShopClient_static.getSessionRI().listJobGroups();
+            stringBuilder.append("\n\t List of Groups:");
+            for (String name : groups) {
+                stringBuilder.append(name);
+                stringBuilder.append("\n");
+            }
+            lbLabel0.setText(stringBuilder.toString());
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+        }
+
+
     }
 
     private void btPauseexistinggroup(java.awt.event.ActionEvent evt) throws RemoteException {
+        StringBuilder stringBuilder = new StringBuilder(9999);
+        stringBuilder.append("DISPLAY:\n **Pause existing group** \n");
+        lbLabel0.setText(stringBuilder.toString());
+        if (JobShopClient_static.getSessionRI() != null) {
+            System.out.print("\nID do Grupo: ");
+            String id = "";
+            if (btSent.getModel().isPressed()) {
+                id = taArea0.getText();
+                if (id.compareTo("") == 0) return;
+            }
+            ArrayList<String> groups = JobShopClient_static.getSessionRI().listJobGroups();
+            stringBuilder.append("\n\t List of Groups:");
+
+            for (String name : groups) {
+                stringBuilder.append(name);
+                stringBuilder.append("\n");
+            }
+
+            lbLabel0.setText(stringBuilder.toString());
+            JobGroupRI jobGroupRI = JobShopClient_static.getSessionRI().joinJobGroup(Integer.parseInt(id));
+            if (jobGroupRI != null) {
+                GroupStatusState s = new GroupStatusState("PAUSE");
+                jobGroupRI.setState(s);
+            }
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+        }
     }
 
-    private void btCreateGroupandattachworker(java.awt.event.ActionEvent evt) throws RemoteException {
+    private void btCreateGroupandattachworker(java.awt.event.ActionEvent evt) throws IOException, TimeoutException {
+        StringBuilder stringBuilder = new StringBuilder(9999);
+        stringBuilder.append("DISPLAY:\n **Create Group and attach worker** \n");
+        lbLabel0.setText(stringBuilder.toString());
+
+        if (sessionRI_static != null) {
+            stringBuilder.append("\nNome do Grupo: ");
+            lbLabel0.setText(stringBuilder.toString());
+            String name = "";
+            if (btSent.getModel().isPressed()) {
+                name = taArea0.getText();
+                // stringBuilder.append(taArea0.getText());
+                // lbLabel0.setText(stringBuilder.toString());
+                if (name.compareTo("") == 0) return;
+            }
+
+
+            stringBuilder.append("\nPath para Ficheiro:");
+            lbLabel0.setText(stringBuilder.toString());
+            String path = "";
+            if (btSent.getModel().isPressed()) {
+                path = taArea0.getText();
+                if (path.compareTo("") == 0) return;
+            }
+
+            stringBuilder.append("\nPlafon para o JobGroup:");
+            lbLabel0.setText(stringBuilder.toString());
+            String plafon = "";
+            if (btSent.getModel().isPressed()) {
+                plafon = taArea0.getText();
+                if (plafon.compareTo("") == 0) return;
+            }
+
+            stringBuilder.append("\nEstrategia para o JobGroup (ts ou ga):");
+            lbLabel0.setText(stringBuilder.toString());
+            String strat = "";
+            if (btSent.getModel().isPressed()) {
+                strat = taArea0.getText();
+                if (strat.compareTo("") == 0) return;
+            }
+
+            if (strat.compareTo("ts") == 0 || strat.compareTo("ga") == 0) {
+                //String path = "edu/ufp/inf/sd/project/data/la04.txt";
+                ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
+                if (Integer.parseInt(plafon) < sessionRI_static.showCoins()) {
+
+                    JobShopClient_static.setJobGroupRI(JobShopClient_static.getSessionRI().createJobGroup(name, Integer.parseInt(plafon), path, strat));
+                    //tira ao saldo o plafon para o jobgroup
+                    JobShopClient_static.getCoinsPayment(-Integer.parseInt(plafon));
+                    if (JobShopClient_static.getJobGroupRI() != null) {
+                        if (JobShopClient_static.getJobGroupRI().getCoins() == 10) {
+                            WorkerImpl worker = new WorkerImpl(sessionRI_static.showMyUsername(), JobShopClient_static.getJobGroupRI(), JobShopClient_static);
+                            JobShopClient_static.getJobGroupRI().verify_winner();
+                        } else {
+                            WorkerImpl worker = new WorkerImpl(sessionRI_static.showMyUsername(), JobShopClient_static.getJobGroupRI(), JobShopClient_static);
+                        }
+
+                    } else {
+                        lbLabel0.setText("Erro ao criar grupo?");
+                    }
+                } else {
+                    lbLabel0.setText("Plafon é superior ao saldo!");
+                }
+            }
+
+
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+
+        }
+
     }
 
-    private void btAttachworkertogroup(java.awt.event.ActionEvent evt) throws RemoteException {
+    private void btAttachworkertogroup(java.awt.event.ActionEvent evt) throws IOException, TimeoutException {
+        StringBuilder stringBuilder = new StringBuilder(9999);
+        stringBuilder.append("DISPLAY:\n **Attach worker to group** \n");
+        lbLabel0.setText(stringBuilder.toString());
+        if (JobShopClient_static.getSessionRI() != null) {
+            stringBuilder.append("ID do Grupo: ");
+            lbLabel0.setText(stringBuilder.toString());
+            String id = "";
+            if (btSent.getModel().isPressed()) {
+                id = taArea0.getText();
+                if (id.compareTo("") == 0) return;
+            }
+            JobGroupRI jobGroupRI = JobShopClient_static.getSessionRI().joinJobGroup(Integer.parseInt(id));
+            if (jobGroupRI != null) {
+                stringBuilder.append("\nCriado com sucesso!");
+                lbLabel0.setText(stringBuilder.toString());
+                ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
+
+                ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
+
+                if (jobGroupRI.getCoins() > 10) {
+                    new WorkerImpl(JobShopClient_static.getSessionRI().showMyUsername(), jobGroupRI, JobShopClient_static);
+
+                } else if (jobGroupRI.getCoins() == 10) {
+                    //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
+                    jobGroupRI.verify_winner();
+                }
+
+            } else {
+                stringBuilder.append("Erro ao adicionar worker!");
+                lbLabel0.setText(stringBuilder.toString());
+            }
+
+
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+        }
+
+
     }
 
     private void btDeleteexistinggroup(java.awt.event.ActionEvent evt) throws RemoteException {
+        StringBuilder stringBuilder = new StringBuilder(9999);
+        stringBuilder.append("DISPLAY:\n **Delete existing groupe** \n");
+        lbLabel0.setText(stringBuilder.toString());
+        if (JobShopClient_static.getSessionRI() != null) {
+            stringBuilder.append("\nNome do Grupo: ");
+            lbLabel0.setText(stringBuilder.toString());
+            String name = "";
+            if (btSent.getModel().isPressed()) {
+                name = taArea0.getText();
+                if (name.compareTo("") == 0) return;
+            }
+
+            //String path = "edu/ufp/inf/sd/project/data/la04.txt";
+            JobShopClient_static.getSessionRI().deleteJobGroup(Integer.parseInt(name));
+
+            stringBuilder.append("\nJobGroup apagado com sucesso!");
+            lbLabel0.setText(stringBuilder.toString());
+
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+        }
+
     }
 
     private void btContinueexistinggroup(java.awt.event.ActionEvent evt) throws RemoteException {
+        StringBuilder stringBuilder = new StringBuilder(9999);
+        stringBuilder.append("DISPLAY:\n **Continue existing groupe** \n");
+        lbLabel0.setText(stringBuilder.toString());
+
+        if (JobShopClient_static.getSessionRI() != null) {
+            stringBuilder.append("\nID do Grupo: ");
+            lbLabel0.setText(stringBuilder.toString());
+            String id = "";
+            if (btSent.getModel().isPressed()) {
+                id = taArea0.getText();
+                if (id.compareTo("") == 0) return;
+            }
+
+            ArrayList<String> groups = JobShopClient_static.getSessionRI().listJobGroups();
+            stringBuilder.append("\n\t List of Groups:");
+
+            for (String name : groups) {
+                stringBuilder.append(name);
+                stringBuilder.append("\n");
+            }
+
+            lbLabel0.setText(stringBuilder.toString());
+            JobGroupRI jobGroupRI = JobShopClient_static.getSessionRI().joinJobGroup(Integer.parseInt(id));
+            if (jobGroupRI != null) {
+                GroupStatusState s = new GroupStatusState("CONTINUE");
+                jobGroupRI.setState(s);
+            }
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+
+        }
     }
 
     private void btAddCoins(java.awt.event.ActionEvent evt) throws RemoteException {
+        StringBuilder stringBuilder = new StringBuilder(9999);
+        stringBuilder.append("DISPLAY:\n ADICIONA O SALDO E CLICA EM [SENT] \n");
+        lbLabel0.setText(stringBuilder.toString());
+        if (sessionRI_static != null) {
+            if (btSent.getModel().isPressed()) {
+                stringBuilder.append("**the button 'sent' was pressed**\n");
+                stringBuilder.append("#Adiconados ");
+                stringBuilder.append(Integer.parseInt(taArea0.getText()));
+                stringBuilder.append(" coins");
+                JobShopClient_static.getCoinsPayment(Integer.parseInt(taArea0.getText()));
+                lbLabel0.setText(stringBuilder.toString());
+            }
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+
+        }
     }
 
     private void btMyCoins(java.awt.event.ActionEvent evt) throws RemoteException {
+        if (sessionRI_static != null) {
+
+            lbLabel0.setText("DISPLAY: \n\t My Coins: " + sessionRI_static.showCoins());
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+        }
     }
 
+    private void btMyuser(ActionEvent evt) throws RemoteException {
+        if (sessionRI_static != null) {
+
+            lbLabel0.setText("DISPLAY: \n\t My username: " + sessionRI_static.showMyUsername());
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+        }
+
+
+    }
+
+
     private void btListUsers(java.awt.event.ActionEvent evt) throws RemoteException {
+        StringBuilder stringBuilder = new StringBuilder(9999);
+        stringBuilder.append("DISPLAY:\n");
+        lbLabel0.setText(stringBuilder.toString());
+        if (sessionRI_static != null) {
+            ArrayList<User> users = sessionRI_static.listUsers();
+            stringBuilder.append("\nUsers Online:");
+            for (User a : users) {
+                stringBuilder.append(a.getUsername());
+                stringBuilder.append("\n");
+            }
+            stringBuilder.append("\n");
+            lbLabel0.setText(stringBuilder.toString());
+        } else {
+            lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(\n");
+        }
+
+
     }
 
     private void btLogout(java.awt.event.ActionEvent evt) throws RemoteException {
+        JobShopClient_static.user_logout();
+        dispose(); //sair da janela
     }
 
 }
