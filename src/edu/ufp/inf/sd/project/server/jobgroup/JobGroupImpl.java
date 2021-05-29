@@ -28,7 +28,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private static final String QUEUE_NAME = "jssp_ga";
     transient private static int nGroups = 0;
 
-
     private ArrayList<String> filas = new ArrayList<String>();
     transient private final HashMap<String, WorkerRI> workers;
     private final HashMap<String, Integer> makespan;
@@ -42,9 +41,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private final String path;
     private final String strat;
     private String exchangeName;
-
-
-
 
     //////////////////////////////////
     // Constructor
@@ -62,31 +58,19 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         // GROUP STARTING STATUS
         this.groupStatusState = new GroupStatusState("CONTINUE");
         this.groupInfoState = new GroupInfoState(path,this.exchangeName);
-
         SendJobs();
 
     }
     public void producer(String id){
-        //Connection connection=null;
-        //Channel channel=null;
-
-        /* Create a connection to the server (abstracts the socket connection,
-           protocol version negotiation and authentication, etc.) */
         ConnectionFactory factory=new ConnectionFactory();
         factory.setHost("localhost");
         factory.setUsername("guest");
         factory.setPassword("guest");
-        //factory.setPassword("guest4rabbitmq");
 
-        /* try-with-resources\. will close resources automatically in reverse order... avoids finally */
         try (//Create a channel, which is where most of the API resides
              Connection connection=factory.newConnection();
              Channel channel=connection.createChannel()
         ) {
-            /* We must declare a queue to send to; this is idempotent, i.e.,
-            it will only be created if it doesn't exist already;
-            then we can publish a message to the queue; The message content is a
-            byte array (can encode whatever we need). */
 
             channel.queueDeclare(id+this.name, false, false, false, null);
             String qeue = id+this.name;
@@ -107,8 +91,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             System.out.println(" [x] Sent strat '" + message + "'");
             channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
 
-
-
             Thread.currentThread().sleep(6000);
 
             message = String.valueOf(CrossoverStrategies.THREE.strategy);
@@ -117,38 +99,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
             Thread.currentThread().sleep(6000);
 
-
-            //sendMessage(channel,this.path);
-           // Thread.currentThread().sleep(5000);
-            // Change strategy to CrossoverStrategies.TWO
-            //sendMessage(channel, String.valueOf(CrossoverStrategies.TWO.strategy));
-            //Thread.currentThread().sleep(2000);
-            // DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-              //  String message = new String(delivery.getBody(), "UTF-8");
-            //    System.out.println(" [x] Received '" + message + "'");
-
-          //  };
-
-            //channel.basicConsume(QUEUE_NAME + "_results", true, deliverCallback, consumerTag -> { });
-            // Change strategy to CrossoverStrategies.THREE
-          //  sendMessage(channel, String.valueOf(CrossoverStrategies.THREE.strategy));
-         //   Thread.currentThread().sleep(2000);
-
-            // Stop the GA
-            //sendMessage(channel, "stop");
-
         } catch (IOException | TimeoutException | InterruptedException e) {
             Logger.getLogger(this.name).log(Level.INFO, e.toString());
-        } /* The try-with-resources will close resources automatically in reverse order
-            finally {
-            try {
-                // Lastly, we close the channel and the connection
-                if (channel != null) { channel.close(); }
-                if (connection != null) { connection.close(); }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } */
+        }
     }
 
     private void consume_results(String id) {
@@ -171,18 +124,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             //channel.queueDeclare(Producer.QUEUE_NAME, true, false, false, null);
             System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
-            /* The server pushes messages asynchronously, hence we provide a
-            DefaultConsumer callback that will buffer the messages until we're ready to use them.
-            Consumer client = new DefaultConsumer(channel) {
-                @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                    String message=new String(body, "UTF-8");
-                    System.out.println(" [x] Received '" + message + "'");
-                }
-            };
-            channel.basicConsume(Producer.QUEUE_NAME, true, client    );
-            */
-
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received from worker  '"+ id +":" + message + "'");
@@ -200,15 +141,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                         this.makespan.replace(id,Integer.parseInt(parts3.substring(1)));
                     }
                 }
-
-
-
             };
             channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> { });
-
-                verify_winner();
-
-
+            verify_winner();
 
         } catch (Exception e){
             //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());
@@ -266,8 +201,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         }
     }
 
-
-
     public int getCoins() {
         return coins;
     }
@@ -276,10 +209,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
         this.coins = coins;
     }
-
-
-
-
 
     public int getId() {
         return id;
@@ -293,32 +222,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         return owner;
     }
 
-
-
-
-
-
-
-
-//    public void askForJob(String workerID) throws IOException {
-//        server_says("Worker asked for a job");
-//
-//        if(getCoins() > 10){
-//            //Enviamos o job e ele executa
-//            this.coins--;
-//            //Falta adicionar ao saldo do user!!!!!
-//
-//            this.workers.get(workerID).receiveJob(this.groupInfoState);
-//            this.workers.get(workerID).receiveCoins(1);
-//
-//        }else {
-//            ///Entra aqui assim que as coins forem 10 , verificamos quem tem a melhor solução
-//
-//            verify_winner();
-//            //Falta a parte de meter o saldo ao vencedor
-//        }
-//
-//    }
     public void verify_winner() throws IOException, InterruptedException, TimeoutException {
         ///Começamos a verificar pela primeira posiçao
 
@@ -371,7 +274,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 }
             }
 
-
             ///Depois de encontrado a melhor soluçao:
 
             //Mudamos o estado do jobgroup para CONCLUIDO
@@ -379,17 +281,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             //Enviamos notificaçao a todos os workers da solução
             String message = "Winner foi:" + winner + "Makespan:" + aux + "\n";
 
-
-
-            /* We must declare a queue to send to; this i
-            s idempotent, i.e.,
-            it will only be created if it doesn't exist already;
-            then we can publish a message to the queue; The message content is a
-            byte array (can encode whatever we need). */
-
-                channel.queueDeclare(id+this.name, false, false, false, null);
-                channel.exchangeDeclare(this.exchangeName, "direct");
-                channel.queueBind(id+this.name, this.exchangeName, id+this.name);
+            channel.queueDeclare(id+this.name, false, false, false, null);
+            channel.exchangeDeclare(this.exchangeName, "direct");
+            channel.queueBind(id+this.name, this.exchangeName, id+this.name);
 
             for(int i= 0 ; i < filas.size();i++){
                 channel.basicPublish(this.exchangeName, filas.get(i), null, message.getBytes("UTF-8"));
@@ -430,8 +324,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
                 }
             }
-
-
             ///Depois de encontrado a melhor soluçao:
 
             //Mudamos o estado do jobgroup para CONCLUIDO
@@ -489,7 +381,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                     newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
 
                 server_says("worker id: " + newID);
-
+                this.coins--;
                 this.workers.put(newID, workerRI);
                 workerRI.setId(newID);
                 try {
@@ -539,15 +431,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 return null;
             }
         }
-
-
-
-
-
-
     }
-
-
 
     @Override
     public void detach(WorkerRI workerRI) throws RemoteException{
@@ -567,9 +451,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.groupStatusState = s;
         //this.notifyAllObservers();
     }
-
-
-
 
     private void server_says(String msg){
         System.out.println("[Server]: " + msg);

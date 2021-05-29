@@ -40,11 +40,7 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         this.jobs = j;
         this.groupInfoState = this.jobGroupRI.attach(this);
 
-
-    //rabbito();
         testerabbit();
-
-
     }
     public static void main(String[] args){}
 
@@ -70,22 +66,13 @@ public void testerabbit() throws IOException, TimeoutException {
 
                 algoritmo(message,this.id+jobGroupRI.getName(),CrossoverStrategies.ONE);
             }
-
-
-
-
     };
     channel.basicConsume(this.id+jobGroupRI.getName(), true, deliverCallback, consumerTag -> { });
-
-
-
-
 }
 
     public void algoritmo(String message,  String qeue , CrossoverStrategies strat){
         GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(message,qeue, strat);
         ga.run();
-
     }
 
     public String getUser() {

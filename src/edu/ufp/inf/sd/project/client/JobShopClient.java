@@ -12,7 +12,6 @@ import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
@@ -88,34 +87,6 @@ public class JobShopClient{
                     // Methods Menu
                 else
                     menu_session();
-
-                    // Methods Menu
-                //else {
-
-                    // menu_session();
-
-
-                    //============ Call TS remote service ============
-                    /*
-                    String jsspInstancePath = "edu/ufp/inf/sd/project/data/la01.txt";
-                    int makespan = this.jobShopRI.runTS(jsspInstancePath);
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO,
-                            "[TS] Makespan for {0} = {1}",
-                            new Object[]{jsspInstancePath, String.valueOf(makespan)});
-
-
-                    //============ Call GA ============
-                    String queue = "jssp_ga";
-                    String resultsQueue = queue + "_results";
-                    CrossoverStrategies strategy = CrossoverStrategies.ONE;
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO,
-                            "GA is running for {0}, check queue {1}",
-                            new Object[]{jsspInstancePath, resultsQueue});
-                    GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(jsspInstancePath, queue, strategy);
-                    ga.run();
-                    */
-
-              //  }
 
             } catch (RemoteException ex) {
                 Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
@@ -270,13 +241,7 @@ public class JobShopClient{
         if (option.equals("8")) {
             continue_jobgroup();
         }
-
-
-
-
     }
-
-
 
     private void add_coins() throws RemoteException {
         if (this.sessionRI != null) {
@@ -345,8 +310,6 @@ public class JobShopClient{
                     System.out.println("Plafon é superior ao saldo!");
                 }
             }
-
-
         }
     }
 
@@ -410,8 +373,6 @@ public class JobShopClient{
                 }else {
                     System.out.println("Erro ao adicionar worker!");
                 }
-
-
         }
     }
 
@@ -453,5 +414,4 @@ public class JobShopClient{
             sessionRI.addCoins(coins);
         }
     }
-
 }
