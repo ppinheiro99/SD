@@ -26,6 +26,7 @@ public class AuthFactoryImpl extends UnicastRemoteObject implements AuthFactoryR
     }
 
     public Boolean registry(String username, String password) throws RemoteException{
+        System.out.println("teste 2: " +username + " " + password + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         if(this.db.usernameIsAvailable(username)){
             this.db.register(username,password);
             return true;
@@ -35,7 +36,6 @@ public class AuthFactoryImpl extends UnicastRemoteObject implements AuthFactoryR
     }
 
     public UserSessionRI login(String username, String password) throws RemoteException{
-
         if (sessions.containsKey(username)) {
             return sessions.get(username);
         } else {

@@ -7,6 +7,8 @@ import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.project.util.jwt.JWT;
 import edu.ufp.inf.sd.project.client.layouts.menucorrect;
+import edu.ufp.inf.sd.rmi._04_diglib.client.DigLibClient;
+import edu.ufp.inf.sd.rmi._05_observer.server.SubjectRI;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 
 import java.awt.*;
@@ -63,50 +65,58 @@ public class JobShopClient extends javax.swing.JFrame {
 
     ///////////////////////////////////////////
     // Initial Setup
-    public JobShopClient(String[] args) {
+    public JobShopClient(String[] args) throws RemoteException {
+
+        String registryIP = args[0];
+        String registryPort = args[1];
+        String serviceName = args[2];
+        this.args = args;
+        this.args[0] = registryIP;
+        this.args[1] = registryPort;
+        this.args[2] = serviceName;
+
+        System.out.println("#################################################################################");
+        System.out.println("###############" + Arrays.toString(this.args) + "###############");
+        System.out.println("#################################################################################");
+
+        //1. Init the GUI components
+        initComponents();
+        //2. Init the RMI context (load security manager, lookup subject, etc.)
+        // contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
+        initContext(args);
+        contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
+        //3. Create observer (which attaches himself to subject)
+        //initObserver(args);
+
+    }
+
+    private void initContext(String args[]) {
         try {
-
-            String registryIP = args[0];
-            String registryPort = args[1];
-            String serviceName = args[2];
-            this.args = args;
-            this.args[0] = registryIP;
-            this.args[1] = registryPort;
-            this.args[2] = serviceName;
-
-            System.out.println("#################################################################################");
-            System.out.println("###############" + Arrays.toString(this.args) + "###############");
-            System.out.println("#################################################################################");
-
-            //1. Init the GUI components
-            initComponents();
-            //2. Init the RMI context (load security manager, lookup subject, etc.)
-            contextRMI = new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
+            //List ans set args
+            SetupContextRMI.printArgs(this.getClass().getName(), args);
+            String registryIP=args[0];
+            String registryPort=args[1];
+            String serviceName=args[2];
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "going to setup RMI context...");
+            //Create a context for RMI setup
+            contextRMI=new SetupContextRMI(this.getClass(), registryIP, registryPort, new String[]{serviceName});
+            //Lookup service
+            this.authRI=(AuthFactoryRI) lookupService();
 
         } catch (RemoteException e) {
-            Logger.getLogger(JobShopClient.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, e);
         }
-
     }
 
 
     ///////////////////////////////////////////
     // Main
     public static void main(String[] args) {
-      /*  if (args != null && args.length < 2) {
-            System.exit(-1);
-        } else {
-            JobShopClient hwc=new JobShopClient(args);
-            hwc.lookupService();
-            hwc.playService();
-        }*/
         java.awt.EventQueue.invokeLater(new Runnable() {
 
             @Override
             public void run() {
                 if (args.length >= 0) {
-
-
                     try {
                         UIManager.setLookAndFeel(
                                 "javax.swing.plaf.metal.MetalLookAndFeel");
@@ -115,9 +125,11 @@ public class JobShopClient extends javax.swing.JFrame {
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
-
-
-                    new JobShopClient(args).setVisible(true);
+                    try {
+                        new JobShopClient(args).setVisible(true);
+                    } catch (RemoteException exception) {
+                        exception.printStackTrace();
+                    }
                 } else {
                     System.out.println(JobShopClient.class + ": call must have the following args: <rmi_ip> <rmi_port> <rmi_service_prefix>");
                 }
@@ -548,21 +560,19 @@ public class JobShopClient extends javax.swing.JFrame {
     /**
      * Create new user
      *
-     * @param evt evento relativo ao carregar no butão
+     * @param evt evento relativo ao carregar no botão
      */
     public void jButtonRegistryActionPerformed(java.awt.event.ActionEvent evt) throws RemoteException {
         if (!jLabelUserName.getText().isEmpty() || !jLabelPassword.getText().isEmpty()) {
 
             System.out.println("#################################################################################");
-            System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
+            System.out.println("###############" + "Registy: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
             System.out.println("#################################################################################");
 
+            System.out.println(jTextFieldUsername.getText() + jTextFieldPassword.getText());
 
-            System.out.println(jLabelUserName.getText() + jLabelPassword.getText());
-            //*******   String token = JWT.createJWT("null",jTextFieldUsername.getText(),jTextFieldPassword.getText(),1000000000);
-            Boolean success = authRI.registry(jLabelUserName.getText(), jLabelPassword.getText());
-
-
+            Boolean success = authRI.registry(jTextFieldUsername.getText(), jTextFieldPassword.getText());
+            System.out.println(success);
             if (success) {
                 JobShopClient.main(this.args);
                 this.setVisible(false);
@@ -589,8 +599,8 @@ public class JobShopClient extends javax.swing.JFrame {
             System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
             System.out.println("#################################################################################");
 
-
-            this.sessionRI = authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
+            System.out.println(jTextFieldUsername.getText()+" "+jTextFieldPassword.getText()+ " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            this.sessionRI = this.authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
             if (sessionRI != null) {
                 System.out.println("Sessao iniciada com sucesso!");
                 menucorrect.menucorrect(this,args);
