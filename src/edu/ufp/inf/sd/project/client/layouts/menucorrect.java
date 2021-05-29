@@ -27,6 +27,8 @@ import javax.swing.JTextArea;
 import javax.swing.JLabel;
 import javax.swing.JButton;
 
+import static edu.ufp.inf.sd.project.client.layouts.createJobGroupLayout.createJobGroupLayoutcorrect;
+
 /**
  * @author Administrator
  * @created May 22, 2021
@@ -493,7 +495,13 @@ public class menucorrect extends JFrame {
     }
 
     private void btCreateGroupandattachworker(java.awt.event.ActionEvent evt) throws IOException, TimeoutException {
-        StringBuilder stringBuilder = new StringBuilder(9999);
+
+        createJobGroupLayoutcorrect(JobShopClient_static,null);
+
+
+
+
+       /* StringBuilder stringBuilder = new StringBuilder(9999);
         stringBuilder.append("<html>DISPLAY: <br/> **Create Group and attach worker** <br/>");
         lbLabel0.setText(stringBuilder.toString());
 
@@ -582,6 +590,8 @@ public class menucorrect extends JFrame {
             lbLabel0.setText(" ERR0 A ACEDER A CLASS SESSAORI :(<br/>");
 
         }
+        */
+
 
 
 
