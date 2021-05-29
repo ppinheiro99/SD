@@ -17,9 +17,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JPanel;
 import javax.swing.BorderFactory;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -47,10 +45,12 @@ public class menucorrect extends JFrame {
     JButton btDeleteexistinggroup;
     JButton btContinueexistinggroup;
     JButton btAddCoins;
-    JButton btMyCoins;
+   // JButton btMyCoins;
     JButton btListUsers;
     JButton btLogout;
-    JButton btMyuser;
+    //JButton btMyuser;
+    JLabel lbLabel1;
+    JLabel lbLabel2;
 
     private static UserSessionRI sessionRI_static;
     private static JobShopClient JobShopClient_static;
@@ -58,13 +58,13 @@ public class menucorrect extends JFrame {
     /**
      *
      */
-    public static void menucorrect(JobShopClient JobShopClient, String args[]) {
+    public static void menucorrect(JobShopClient JobShopClient, String args[]) throws RemoteException {
         JobShopClient_static = JobShopClient;
         sessionRI_static = JobShopClient_static.getSessionRI();
         main(args);
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws RemoteException {
 
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
@@ -75,12 +75,13 @@ public class menucorrect extends JFrame {
         }
         themenucorrect = new menucorrect();
 
+
     }
 
     /**
      *
      */
-    public menucorrect() {
+    public menucorrect() throws RemoteException {
         super("Session:");
 
         pnPanel0 = new JPanel();
@@ -100,7 +101,7 @@ public class menucorrect extends JFrame {
         gbPanel0.setConstraints(taArea0, gbcPanel0);
         pnPanel0.add(taArea0);
 
-        lbLabel0 = new JLabel("DISPLAY:");
+        lbLabel0 = new JLabel("DISPLAY:\n\n\n\n");
         gbcPanel0.gridx = 0;
         gbcPanel0.gridy = 0;
         gbcPanel0.gridwidth = 21;
@@ -111,6 +112,44 @@ public class menucorrect extends JFrame {
         gbcPanel0.anchor = GridBagConstraints.NORTH;
         gbPanel0.setConstraints(lbLabel0, gbcPanel0);
         pnPanel0.add(lbLabel0);
+
+        lbLabel1 = new JLabel( ""  );
+        lbLabel1.setBackground( new Color( 255,249,44 ) );
+        gbcPanel0.gridx = 17;
+        gbcPanel0.gridy = 10;
+        gbcPanel0.gridwidth = 4;
+        gbcPanel0.gridheight = 2;
+        gbcPanel0.fill = GridBagConstraints.BOTH;
+        gbcPanel0.weightx = 1;
+        gbcPanel0.weighty = 1;
+        gbcPanel0.anchor = GridBagConstraints.NORTH;
+        gbPanel0.setConstraints( lbLabel1, gbcPanel0 );
+        pnPanel0.add( lbLabel1 );
+
+
+        lbLabel2 = new JLabel( ""  );
+        lbLabel2.setBackground( new Color( 154,238,238 ) );
+        gbcPanel0.gridx = 17;
+        gbcPanel0.gridy = 9;
+        gbcPanel0.gridwidth = 4;
+        gbcPanel0.gridheight = 1;
+        gbcPanel0.fill = GridBagConstraints.BOTH;
+        gbcPanel0.weightx = 1;
+        gbcPanel0.weighty = 1;
+        gbcPanel0.anchor = GridBagConstraints.NORTH;
+        gbPanel0.setConstraints( lbLabel2, gbcPanel0 );
+        pnPanel0.add( lbLabel2 );
+
+        if (JobShopClient_static.getSessionRI() != null) {
+            lbLabel1.setText("My Coins: " + sessionRI_static.showCoins());
+            lbLabel2.setText("My username: " + sessionRI_static.showMyUsername());
+        } else {
+            lbLabel1.setText("My Coins: ERRO");
+            lbLabel2.setText("My username: ERRO");
+        }
+
+
+
 
 
 /******************************************************* BUTTOES *****************************************************/
@@ -286,6 +325,8 @@ public class menucorrect extends JFrame {
             }
         });
 
+
+/*
         btMyCoins = new JButton("My Coins");
         gbcPanel0.gridx = 18;
         gbcPanel0.gridy = 16;
@@ -328,7 +369,7 @@ public class menucorrect extends JFrame {
                 }
             }
         });
-
+*/
 
         btListUsers = new JButton("List Users");
         gbcPanel0.gridx = 18;
@@ -383,7 +424,7 @@ public class menucorrect extends JFrame {
 
     /***************************************fUNCOES****************************************************************/
     private void pnPanel0(java.awt.event.ActionEvent evt) throws RemoteException {
-        taArea0.setText("empresa de chouriças");
+       // taArea0.setText("empresa de chouriças");
     }
 
     private void taArea0(java.awt.event.ActionEvent evt) throws RemoteException {
@@ -394,6 +435,7 @@ public class menucorrect extends JFrame {
     }
 
     private void btSent(java.awt.event.ActionEvent evt) throws RemoteException {
+       // taArea0.setText("");
     }
 
     private void btListexistinggroups(java.awt.event.ActionEvent evt) throws RemoteException {
@@ -637,7 +679,7 @@ public class menucorrect extends JFrame {
 
         }
     }
-
+/*
     private void btMyCoins(java.awt.event.ActionEvent evt) throws RemoteException {
         if (sessionRI_static != null) {
 
@@ -657,7 +699,7 @@ public class menucorrect extends JFrame {
 
 
     }
-
+*/
 
     private void btListUsers(java.awt.event.ActionEvent evt) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder(9999);

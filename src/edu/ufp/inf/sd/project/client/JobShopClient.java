@@ -575,15 +575,11 @@ public class JobShopClient extends javax.swing.JFrame {
             System.out.println("###############" + "LOGIN: " + jTextFieldUsername.getText() + "PASS: " + jTextFieldPassword.getText() + "###############");
             System.out.println("#################################################################################");
 
-            menucorrect.menucorrect(this,args);
-
-
-            System.out.println("chegou aqui");
 
             this.sessionRI = authRI.login(jTextFieldUsername.getText(), jTextFieldPassword.getText());
             if (sessionRI != null) {
                 System.out.println("Sessao iniciada com sucesso!");
-               // menucorrect.main(args,sessionRI);
+                menucorrect.menucorrect(this,args);
 
             } else {
                 System.out.println("Erro ao iniciar sessao!");
