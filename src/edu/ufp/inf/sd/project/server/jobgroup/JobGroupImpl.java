@@ -93,9 +93,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             String message = path;
             channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
             System.out.println(" [x] Sent '" + message + "'");
+            Thread.currentThread().sleep(2000);
 
-
-        } catch (IOException | TimeoutException e) {
+        } catch (IOException | TimeoutException | InterruptedException e) {
             Logger.getLogger(this.name).log(Level.INFO, e.toString());
         } /* The try-with-resources will close resources automatically in reverse order
             finally {

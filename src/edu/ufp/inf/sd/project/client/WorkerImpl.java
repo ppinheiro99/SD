@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
 
-
+    private static final String EXCHANGE_NAME = "jssp_ga";
     private String id;
     private String user;
     protected final JobGroupRI jobGroupRI;
@@ -57,20 +57,24 @@ public void testerabbit() throws IOException, TimeoutException {
     //channel.exchangeDeclare(groupInfoState.getExchangeName(),"direct");
     // channel.queueBind(this.id+jobGroupRI.getName(), groupInfoState.getExchangeName(), this.id+jobGroupRI.getName());
 
-    channel.exchangeDeclare(groupInfoState.getExchangeName(), "fanout");
-    String queueName = channel.queueDeclare().getQueue();
+
+    //String queueName = channel.queueDeclare().getQueue();
     //channel.exchangeDeclare(queueName, "fanout");
-    channel.queueBind (queueName, groupInfoState.getExchangeName(), "" );
+    //channel.queueBind (EXCHANGE_NAME, groupInfoState.getExchangeName(), "" );
+
+    String resultsQueue = EXCHANGE_NAME + "_results";
+    channel.exchangeDeclare(resultsQueue, "fanout");
+    //channel.queueDeclare(resultsQueue, false, false, false, null);
 
     System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), "UTF-8");
-        System.out.println(" [x] Received '" +
-                delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
-        algoritmo(message,queueName,CrossoverStrategies.ONE);
+        algoritmo(message,EXCHANGE_NAME,CrossoverStrategies.ONE);
+        System.out.println(" [x] Received '" + delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
+        System.out.println("teste !!!! : "+message);
     };
-    channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
+    channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> {});
 }
 
     public void algoritmo(String message,  String qeue , CrossoverStrategies strat){
