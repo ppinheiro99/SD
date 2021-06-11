@@ -361,7 +361,7 @@ public class JobShopClient{
 
 
 
-                if(Integer.parseInt(plafon) <= sessionRI.showCoins()){
+                if(Integer.parseInt(plafon) < sessionRI.showCoins()){
                     this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),ficheiros,strat);
                     //tira ao saldo o plafon para o jobgroup
                     this.getCoinsPayment(-Integer.parseInt(plafon));
