@@ -18,7 +18,6 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
@@ -33,7 +32,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     private ArrayList<String> filas = new ArrayList<String>();
     transient private final HashMap<String, WorkerRI> workers;
-    private final HashMap<String, ArrayList<Integer>> makespan;
+    private final HashMap<String, Integer> makespan;
     private GroupInfoState groupInfoState;
     private GroupStatusState groupStatusState;
     // JobGroup Info
@@ -41,7 +40,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private final int id;
     private final String name;
     private final String owner;
-    private final ArrayList<String> ficheiros;
+    private final String path;
     private final String strat;
     private final Integer nrworkers;
     private String exchangeName;
@@ -51,12 +50,12 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     //////////////////////////////////
     // Constructor
-    public JobGroupImpl(int coins,String name, String owner, ArrayList<String> ficheiros,String strat,String nrworkers) throws RemoteException {
+    public JobGroupImpl(int coins,String name, String owner,String path,String strat, String nrworkers) throws RemoteException {
         super();
         this.name = name;
         this.coins = coins;
         this.owner = owner;
-        this.ficheiros = ficheiros;
+        this.path = path;
         this.id = ++nGroups;
         this.strat = strat;
         this.nrworkers = Integer.parseInt(nrworkers);
@@ -65,7 +64,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.exchangeName = "exchange_" + this.id + "_" + this.name;
         // GROUP STARTING STATUS
         this.groupStatusState = new GroupStatusState("CONTINUE");
-        this.groupInfoState = new GroupInfoState(ficheiros,this.exchangeName);
+        this.groupInfoState = new GroupInfoState(path,this.exchangeName);
 
         server_says("Ready and waiting");
 
@@ -100,34 +99,26 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             //channel.queueDeclare(QUEUE_NAME, true, false, false, null);
             consume_results(id);
             //Enviar o path
-            ArrayList<String> messages = ficheiros ;
+            String message = path ;
 
-            for (String message: messages
-                 ) {
-                channel.basicPublish(this.exchangeName, id + this.name, null, message.getBytes("UTF-8"));
-                System.out.println(" [x] Sent '" + messages + "'");
-
-                //Enviar as strats
-                message = String.valueOf(CrossoverStrategies.TWO.strategy);
-                System.out.println(" [x] Sent strat '" + message + "'");
-                channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
+            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
+            System.out.println(" [x] Sent '" + message + "'");
 
 
-
-                Thread.currentThread().sleep(6000);
-
-                message = String.valueOf(CrossoverStrategies.THREE.strategy);
-                System.out.println(" [x] Sent strat '" + message + "'");
-                channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
-
-                Thread.currentThread().sleep(6000);
-
-
-            }
+            //Enviar as strats
+            message = String.valueOf(CrossoverStrategies.TWO.strategy);
+            System.out.println(" [x] Sent strat '" + message + "'");
+            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
 
 
 
+            Thread.currentThread().sleep(6000);
 
+            message = String.valueOf(CrossoverStrategies.THREE.strategy);
+            System.out.println(" [x] Sent strat '" + message + "'");
+            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
+
+            Thread.currentThread().sleep(6000);
 
 
             //sendMessage(channel,this.path);
@@ -164,9 +155,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     }
 
     private void consume_results(String id) {
-       /* try {
-            *//* Open a connection and a channel, and declare the queue from which to consume.
-            Declare the queue here, as well, because we might start the client before the publisher. *//*
+        try {
+            /* Open a connection and a channel, and declare the queue from which to consume.
+            Declare the queue here, as well, because we might start the client before the publisher. */
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost("localhost");
             //Use same username/passwd as the for accessing Management UI @ http://localhost:15672/
@@ -179,11 +170,11 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
             String resultsQueue = id+this.name + "_results";
 
-           // channel.queueDeclare(resultsQueue, false, false, false, null);
+            channel.queueDeclare(resultsQueue, false, false, false, null);
             //channel.queueDeclare(Producer.QUEUE_NAME, true, false, false, null);
             System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
-            *//* The server pushes messages asynchronously, hence we provide a
+            /* The server pushes messages asynchronously, hence we provide a
             DefaultConsumer callback that will buffer the messages until we're ready to use them.
             Consumer client = new DefaultConsumer(channel) {
                 @Override
@@ -193,20 +184,17 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 }
             };
             channel.basicConsume(Producer.QUEUE_NAME, true, client    );
-            *//*
+            */
 
-          *//*  DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received from worker  '"+ id +":" + message + "'");
-                ArrayList<Integer> makespan_received= new ArrayList<>();
-
                 if(message.compareTo("Setting Strategy 1")!=0 && message.compareTo("Setting Strategy 2")!=0 && message.compareTo("Setting Strategy 3")!=0){
                     String[] parts = message.split("=");
                     String parts1 = parts[1];
                     //System.out.println(" [x] Depois do split  :" + parts1 + "'");
                     String[] parts2 = parts1.split(" ");
                     String parts3 = parts[1];
-                    makespan_received.add(Integer.parseInt(parts3.substring(1)));
 
                     //Se o makespan que recebemos for menor que o que temos para este worker , atualizamos
                     if(this.makespan.get(id)==null){
@@ -216,7 +204,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                     }
                 }
 
-*//*
+
 
             };
             channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> { });
@@ -228,7 +216,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         } catch (Exception e){
             //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());
             e.printStackTrace();
-        }*/
+        }
     }
 
 
@@ -239,12 +227,12 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-    public void receiveResults(String id , ArrayList<Integer> makespans) {
+    public void receiveResults(String id , Integer makespan) {
         server_says("Getting the result from " + id);
         ///Se o nosso worker estiver associado ao jobgroup
         if(this.workers.containsKey(id)){
             ///Atualizamos o nosso hashmap de resultados(makespan)
-            this.makespan.put(id,makespans);
+            this.makespan.put(id,makespan);
 
         }
         //a cada resultado recebido retiramos uma moeda, mas so pagamos na parte de anunciar vencedor
@@ -303,14 +291,14 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         int aux = 0;
         String winner="";
 
-       /* if(this.strat.compareTo("ga")==0){
+        if(this.strat.compareTo("ga")==0){
             ConnectionFactory factory=new ConnectionFactory();
             factory.setHost("localhost");
             factory.setUsername("guest");
             factory.setPassword("guest");
             //factory.setPassword("guest4rabbitmq");
 
-            *//* try-with-resources\. will close resources automatically in reverse order... avoids finally *//*
+            /* try-with-resources\. will close resources automatically in reverse order... avoids finally */
             //Create a channel, which is where most of the API resides
             Connection connection=factory.newConnection();
             Channel channel=connection.createChannel();
@@ -325,18 +313,18 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
             //se a estrategia for ga , damos um sleep de 6000milis , para termos tempo de receber os resultados
 
-            for(Map.Entry<String, ArrayList<Integer>> entry : this.makespan.entrySet()) {
+            for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
                 String key = entry.getKey();
-                ArrayList<Integer> values = entry.getValue();
+                Integer value = entry.getValue();
                 //Cada worker recebe 1 pelo trabalho
 
                 this.workers.get(entry.getKey()).receiveCoins(1);
                 if(aux == 0){
-                    aux = values;
+                    aux = value;
                     winner = key;
 
                 }
-                if(values. < aux){
+                if(value < aux){
 
                     aux = value;
                     winner = key;
@@ -354,11 +342,11 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-            *//* We must declare a queue to send to; this i
+            /* We must declare a queue to send to; this i
             s idempotent, i.e.,
             it will only be created if it doesn't exist already;
             then we can publish a message to the queue; The message content is a
-            byte array (can encode whatever we need). *//*
+            byte array (can encode whatever we need). */
 
                 channel.queueDeclare(id+this.name, false, false, false, null);
                 channel.exchangeDeclare(this.exchangeName, "direct");
@@ -383,38 +371,26 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 }
 
             });
-        }else {*/
+        }else {
 
-
-
-
-            for(Map.Entry<String, ArrayList<Integer>> entry : this.makespan.entrySet()) {
+            for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
                 String key = entry.getKey();
-                ArrayList<Integer> value = entry.getValue();
+                Integer value = entry.getValue();
+                //Cada worker recebe 1 pelo trabalho
 
-
-                //Cada worker recebe 1 por cada ficheiro
-                int numero_ficheiros=1;
-                for (ArrayList<Integer> arrayList: makespan.values()) {
-                    numero_ficheiros=arrayList.size();
-                    break;
-                }
-
-                this.workers.get(entry.getKey()).receiveCoins(numero_ficheiros);
-
-                 int media = (int) value.stream().mapToInt(val -> val).average().orElse(0.0);
-
+                this.workers.get(entry.getKey()).receiveCoins(1);
                 if(aux == 0){
-                    aux = media;
+                    aux = value;
                     winner = key;
 
                 }
-                if(media < aux){
-                    aux = media;
+                if(value < aux){
+
+                    aux = value;
                     winner = key;
 
                 }
-            //}
+            }
 
 
             ///Depois de encontrado a melhor soluçao:

@@ -13,14 +13,9 @@ import edu.ufp.inf.sd.project.util.geneticalgorithm.CrossoverStrategies;
 import edu.ufp.inf.sd.project.util.geneticalgorithm.GeneticAlgorithmJSSP;
 import edu.ufp.inf.sd.project.util.tabusearch.TabuSearchJSSP;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -44,8 +39,6 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         this.jobGroupRI = jobgroupRI;
         this.jobs = j;
         this.groupInfoState = this.jobGroupRI.attach(this);
-
-
 
 
     //rabbito();
@@ -111,8 +104,8 @@ public void testerabbit() throws IOException, TimeoutException {
 
     public void receiveJob(GroupInfoState groupInfoState) throws IOException {
         //Recebemos o nosso job a desempenhar , executamos e enviamos  o resultado para o jobgroup
-        ArrayList<Integer> makespans = processJob(groupInfoState.getPath());
-        jobGroupRI.receiveResults(this.id,makespans);
+        Integer makespan = processJob(groupInfoState.getPath());
+        jobGroupRI.receiveResults(this.id,makespan);
 
     }
 
@@ -125,57 +118,18 @@ public void testerabbit() throws IOException, TimeoutException {
         System.out.println( msg);
     }
 
-
-    //###############String path = "edu/ufp/inf/sd/project/data/la04.txt";######################
     /*
      * Process and do the job received from jobGroup.
      */
-    private ArrayList<Integer> processJob(ArrayList<String> ficheiros) throws IOException {
-        File pasta = new File("edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/");
-        ArrayList<Integer> makespans = new ArrayList<>();
-        if (!pasta.exists()) pasta.mkdirs();
-        for (String ficheiro: ficheiros) {
-            int indice = makespans.size()+1;
-            String jsspInstancePath ="edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/ficheiro_recevido_"+indice+".txt";
-            File file = new File(jsspInstancePath);
-            try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
-                out.print(ficheiro);
-                out.flush();
-                out.close();
-            }
+    private int processJob(String jsspInstancePath) throws IOException {
 
-
-
-
-       /* System.out.println("ficheiro recebido:");
-        System.out.println(ficheiro);
-        System.out.println(jsspInstancePath);*/
-
-        /*
-        //Create the file
-        if (file.createNewFile())
-        {
-            System.out.println("File is created!");
-        } else {
-            System.out.println("File already exists.");
-        }
-*/
-
-        try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
-            out.print(ficheiro);
-            out.flush();
-            out.close();
-        }
 
         TabuSearchJSSP ts = new TabuSearchJSSP(jsspInstancePath);
         int makespan = ts.run();
-        makespans.add(makespan);
 
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "[TS] Makespan for {0} = {1}", new Object[]{jsspInstancePath,String.valueOf(makespan)});
         workerSays("Job Done! Makespan was :" + makespan);
-        }
-
-        return makespans;
+        return makespan;
     }
 
     /*
