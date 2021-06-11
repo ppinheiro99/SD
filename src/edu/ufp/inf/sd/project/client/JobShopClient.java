@@ -12,13 +12,13 @@ import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
-import java.sql.SQLOutput;
+
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import java.util.Random;
 
 public class JobShopClient{
 
@@ -28,6 +28,9 @@ public class JobShopClient{
     public boolean isLoggedIn = false;
     private AuthFactoryRI authRI;
     private UserSessionRI sessionRI;
+    private ArrayList<WorkerImpl> workers = new ArrayList<WorkerImpl>();
+    private Random random = new Random();
+    private Integer workersNr = random.nextInt(8 - 1 + 1) + 1 ;
 
     ///////////////////////////////////////////
     // Main
@@ -323,20 +326,16 @@ public class JobShopClient{
             String plafon = scanner.nextLine();
             System.out.println("\nEstrategia para o JobGroup (ts ou ga):");
             String strat = scanner.nextLine();
+            System.out.println("\nNumero minimo de workers para arrancar:");
+            String nrminworker = scanner.nextLine();
             if(strat.compareTo("ts")==0 || strat.compareTo("ga")==0){
                 //String path = "edu/ufp/inf/sd/project/data/la04.txt";
                 ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
                 if(Integer.parseInt(plafon) < sessionRI.showCoins()){
-                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),path,strat);
+                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),path,strat,nrminworker);
                     //tira ao saldo o plafon para o jobgroup
                     this.getCoinsPayment(-Integer.parseInt(plafon));
                     if (jobGroupRI != null) {
-                        if(jobGroupRI.getCoins() == 10){
-                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
-                            jobGroupRI.verify_winner();
-                        }else{
-                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
-                        }
 
                     } else {
                         System.out.println("Erro ao criar grupo?");
@@ -392,20 +391,20 @@ public class JobShopClient{
 
             System.out.println("ID do Grupo: ");
             String id = scanner.nextLine();
+            System.out.println("Quantos workers quer associar ao jobgroup? (" + workersNr + ")"  );
+            String wnr = scanner.nextLine();
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
             if(jobGroupRI != null) {
-                    System.out.println("Criado com sucesso!");
-                    ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
-
-                    ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
-
-                    if(jobGroupRI.getCoins() > 10){
-                        new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this);
-
-                    }else if (jobGroupRI.getCoins() == 10){
-                        //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
-                            jobGroupRI.verify_winner();
+                    //Se o tamanho do nosso arraylist de workers for menor que o numero total de workers que temos , entao ainda podemos associar
+                    if(workers.size() < workersNr){
+                        //Enquanto i for menor que o numero de workers que queremos associar , associamos
+                        for (int i = 0 ; i < Integer.parseInt(wnr) ; i++) {
+                            workers.add(new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this)) ;
+                        }
                     }
+                    System.out.println("Criado com sucesso!");
+
+
 
                 }else {
                     System.out.println("Erro ao adicionar worker!");

@@ -42,7 +42,7 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
 
 
     //rabbito();
-        testerabbit();
+        //testerabbit();
 
 
     }
