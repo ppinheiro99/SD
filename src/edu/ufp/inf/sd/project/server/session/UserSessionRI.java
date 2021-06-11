@@ -3,9 +3,11 @@ package edu.ufp.inf.sd.project.server.session;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.user.User;
 
+import java.io.FileNotFoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.List;
 
 public interface UserSessionRI extends Remote {
     // Session
@@ -17,7 +19,7 @@ public interface UserSessionRI extends Remote {
     public String showMyUsername() throws RemoteException;
 
     //JobGroups
-    public JobGroupRI createJobGroup(String name, int coins, String path,String strat, String nrworkers) throws RemoteException;
+    public JobGroupRI createJobGroup(String name, int coins, ArrayList<String> ficheiros, String strat, String nrworkers) throws RemoteException, FileNotFoundException;
     public ArrayList<String> listJobGroups() throws RemoteException;
     public void deleteJobGroup(int id) throws RemoteException;
     public JobGroupRI joinJobGroup(int id) throws RemoteException;

@@ -7,18 +7,27 @@ import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Random;
+import java.io.IOException;
+import java.nio.file.Files;
 
 public class JobShopClient{
 
@@ -31,6 +40,7 @@ public class JobShopClient{
     private ArrayList<WorkerImpl> workers = new ArrayList<WorkerImpl>();
     private Random random = new Random();
     private Integer workersNr = random.nextInt(8 - 1 + 1) + 1 ;
+
 
     ///////////////////////////////////////////
     // Main
@@ -64,6 +74,7 @@ public class JobShopClient{
             Registry registry = contextRMI.getRegistry();
             if (registry != null) {
                 String serviceUrl = contextRMI.getServicesUrl(0);
+                System.out.println("####chega aqui###");
                 authRI = (AuthFactoryRI) registry.lookup(serviceUrl);
 
             } else {
@@ -314,14 +325,35 @@ public class JobShopClient{
         }
     }
 
+
+    public static String readFile(String path, Charset encoding) throws IOException {
+        return Files.readString(Paths.get(path), encoding);
+    }
+
     ///Create JobGroup
 
     private void jobgroup_create() throws IOException, TimeoutException, InterruptedException {
         if (this.sessionRI != null) {
+           ArrayList<String> ficheiros = new ArrayList<>();
+
             System.out.print("\nNome do Grupo: ");
             String name = scanner.nextLine();
-            System.out.println("\nPath para Ficheiro:");
-            String path = scanner.nextLine();
+            System.out.println("\nNumero de Ficheiros a enviar:");
+            String nr_path = scanner.nextLine();
+            for (int i = 0; i < Integer.parseInt(nr_path); i++) {
+                System.out.println("\nNome do ficheiro (sem \".txt\":");
+                String name_file = scanner.nextLine();
+                String path = "edu/ufp/inf/sd/project/data/"+name_file+".txt";
+                    try {
+                        ficheiros.add(readFile(path, StandardCharsets.UTF_8));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    /**Debug**/ System.out.println(ficheiros);
+
+                }
+
             System.out.println("\nPlafon para o JobGroup:");
             String plafon = scanner.nextLine();
             System.out.println("\nEstrategia para o JobGroup (ts ou ga):");
@@ -331,8 +363,11 @@ public class JobShopClient{
             if(strat.compareTo("ts")==0 || strat.compareTo("ga")==0){
                 //String path = "edu/ufp/inf/sd/project/data/la04.txt";
                 ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
+
+
+
                 if(Integer.parseInt(plafon) < sessionRI.showCoins()){
-                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),path,strat,nrminworker);
+                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),ficheiros,strat,nrminworker);
                     //tira ao saldo o plafon para o jobgroup
                     this.getCoinsPayment(-Integer.parseInt(plafon));
                     if (jobGroupRI != null) {
