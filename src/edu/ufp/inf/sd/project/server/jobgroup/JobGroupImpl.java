@@ -2,6 +2,7 @@ package edu.ufp.inf.sd.project.server.jobgroup;
 
 import com.rabbitmq.client.*;
 import edu.ufp.inf.sd.RabbitUtils;
+import edu.ufp.inf.sd.project.client.WorkerImpl;
 import edu.ufp.inf.sd.project.client.WorkerRI;
 import edu.ufp.inf.sd.project.producer.Producer;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
@@ -41,6 +42,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private final String owner;
     private final String path;
     private final String strat;
+    private final Integer nrworkers;
     private String exchangeName;
 
 
@@ -48,7 +50,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     //////////////////////////////////
     // Constructor
-    public JobGroupImpl(int coins,String name, String owner,String path,String strat) throws RemoteException {
+    public JobGroupImpl(int coins,String name, String owner,String path,String strat, String nrworkers) throws RemoteException {
         super();
         this.name = name;
         this.coins = coins;
@@ -56,6 +58,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.path = path;
         this.id = ++nGroups;
         this.strat = strat;
+        this.nrworkers = Integer.parseInt(nrworkers);
         this.makespan = new HashMap<>();
         this.workers = new HashMap<>();
         this.exchangeName = "exchange_" + this.id + "_" + this.name;
@@ -63,7 +66,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.groupStatusState = new GroupStatusState("CONTINUE");
         this.groupInfoState = new GroupInfoState(path,this.exchangeName);
 
-        SendJobs();
+        server_says("Ready and waiting");
 
     }
     public void producer(String id){
@@ -222,32 +225,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         System.out.println(" [x] Sent '" + message + "'");
     }
 
-    public void SendJobs() {
-        server_says("Sending the jobs");
 
-        ///Mandamos os detalhes do job a cada worker
-        this.workers.forEach((id, workerRI) -> {
-            try {
-                ///Antes de enviarmos jobs para cada worker temos que verificar que temos plafon suficiente.
-                if(this.coins > 10){
-                    //Enviamos o job e ele executa
-                    //Falta adicionar ao saldo do user!!!!!
-                    this.coins--;
-                    workerRI.receiveJob(this.groupInfoState);
-                }else {
-                    ///Entra aqui assim que as coins forem 10 , verificamos quem tem a melhor solução
-                    verify_winner();
-                    //Falta a parte de meter o saldo ao vencedor
-                }
-
-            } catch (IOException | InterruptedException | TimeoutException e) {
-                e.printStackTrace();
-            }
-
-        });
-
-        server_says("Jobs Sent");
-    }
 
     public void receiveResults(String id , Integer makespan) {
         server_says("Getting the result from " + id);
@@ -257,7 +235,8 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             this.makespan.put(id,makespan);
 
         }
-
+        //a cada resultado recebido retiramos uma moeda, mas so pagamos na parte de anunciar vencedor
+        this.coins--;
         server_says("Result Received");
         try {
             verify_winner();
@@ -300,25 +279,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-//    public void askForJob(String workerID) throws IOException {
-//        server_says("Worker asked for a job");
-//
-//        if(getCoins() > 10){
-//            //Enviamos o job e ele executa
-//            this.coins--;
-//            //Falta adicionar ao saldo do user!!!!!
-//
-//            this.workers.get(workerID).receiveJob(this.groupInfoState);
-//            this.workers.get(workerID).receiveCoins(1);
-//
-//        }else {
-//            ///Entra aqui assim que as coins forem 10 , verificamos quem tem a melhor solução
-//
-//            verify_winner();
-//            //Falta a parte de meter o saldo ao vencedor
-//        }
-//
-//    }
+
     public void verify_winner() throws IOException, InterruptedException, TimeoutException {
         ///Começamos a verificar pela primeira posiçao
 
@@ -484,19 +445,16 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 // Generate a new Unique ID
                 server_says(" new worker detected. Generating new id ...");
 
-                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 1000 + 1);
                 while(this.workers.containsKey(newID))
-                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 1000 + 1);
 
                 server_says("worker id: " + newID);
 
                 this.workers.put(newID, workerRI);
                 workerRI.setId(newID);
-                try {
-                    this.workers.get(newID).receiveJob(this.groupInfoState);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+
+                check_nrworkers();
                 return this.groupInfoState;
             }else {
                 try {
@@ -517,9 +475,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 // Generate a new Unique ID
                 server_says(" new worker detected. Generating new id ...");
 
-                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 1000 + 1);
                 while(this.workers.containsKey(newID))
-                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 1000 + 1);
 
                 server_says("worker id: " + newID);
 
@@ -547,6 +505,28 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     }
 
+    private void check_nrworkers() {
+        ///Se os workers attached forem maiores ou iguais que o nr de workers minimo , arrancamos o algoritmo
+
+        if(this.workers.size() >= nrworkers){
+            for(Map.Entry<String, WorkerRI> entry : this.workers.entrySet()) {
+                String key = entry.getKey();
+                //Se o worker ainda nao tiver recebido o trabalho , entao enviamos
+
+                
+                try {
+                    this.workers.get(key).receiveJob(this.groupInfoState);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+
+            }
+
+        }
+        return;
+    }
 
 
     @Override

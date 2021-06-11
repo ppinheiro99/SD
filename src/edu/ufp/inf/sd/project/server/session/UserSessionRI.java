@@ -17,7 +17,7 @@ public interface UserSessionRI extends Remote {
     public String showMyUsername() throws RemoteException;
 
     //JobGroups
-    public JobGroupRI createJobGroup(String name, int coins, String path,String strat) throws RemoteException;
+    public JobGroupRI createJobGroup(String name, int coins, String path,String strat, String nrworkers) throws RemoteException;
     public ArrayList<String> listJobGroups() throws RemoteException;
     public void deleteJobGroup(int id) throws RemoteException;
     public JobGroupRI joinJobGroup(int id) throws RemoteException;
