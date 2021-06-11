@@ -24,7 +24,7 @@ public interface JobGroupRI extends Remote {
     public String getName() throws RemoteException;
     public int getCoins() throws RemoteException;
     public void setCoins(int coins) throws RemoteException;
-    public void receiveResults(String id , Integer makespan) throws RemoteException;
+    public void receiveResults(String id , ArrayList<Integer> makespans) throws RemoteException;
 
     public void verify_winner() throws IOException, InterruptedException, TimeoutException;
 
