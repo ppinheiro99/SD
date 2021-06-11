@@ -410,7 +410,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
             });
         }
 
@@ -509,11 +508,12 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         ///Se os workers attached forem maiores ou iguais que o nr de workers minimo , arrancamos o algoritmo
 
         if(this.workers.size() >= nrworkers){
+            notifyAllObservers("The server has a task for you");
             for(Map.Entry<String, WorkerRI> entry : this.workers.entrySet()) {
                 String key = entry.getKey();
                 //Se o worker ainda nao tiver recebido o trabalho , entao enviamos
 
-                
+
                 try {
                     this.workers.get(key).receiveJob(this.groupInfoState);
                 } catch (IOException e) {
@@ -531,8 +531,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     @Override
     public void detach(WorkerRI workerRI) throws RemoteException{
-        System.out.println("\nDetach user ...");
+        System.out.println("\nDetach user ..." + workerRI.getUser());
         workers.remove(workerRI);
+
     }
 
     @Override
