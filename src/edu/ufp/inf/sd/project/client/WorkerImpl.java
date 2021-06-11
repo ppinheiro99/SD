@@ -46,28 +46,31 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
 
 public void testerabbit() throws IOException, TimeoutException {
 
+
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost("localhost");
+    factory.setUsername("guest");
+    factory.setPassword("guest");
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
 
-    channel.exchangeDeclare(groupInfoState.getExchangeName(),"direct");
-    //String queueName = channel.queueDeclare().getQueue();
-    channel.queueBind(this.id+jobGroupRI.getName(), groupInfoState.getExchangeName(), this.id+jobGroupRI.getName());
+    //channel.exchangeDeclare(groupInfoState.getExchangeName(),"direct");
+    // channel.queueBind(this.id+jobGroupRI.getName(), groupInfoState.getExchangeName(), this.id+jobGroupRI.getName());
+
+    channel.exchangeDeclare(groupInfoState.getExchangeName(), "fanout");
+    String queueName = channel.queueDeclare().getQueue();
+    //channel.exchangeDeclare(queueName, "fanout");
+    channel.queueBind (queueName, groupInfoState.getExchangeName(), "" );
 
     System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), "UTF-8");
-
         System.out.println(" [x] Received '" +
                 delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
-            if(message.compareTo("1")!=0 || message.compareTo("2")!=0 || message.compareTo("3")!=3 || message.compareTo("stop")!=0){
-
-                algoritmo(message,this.id+jobGroupRI.getName(),CrossoverStrategies.ONE);
-            }
+        algoritmo(message,queueName,CrossoverStrategies.ONE);
     };
-    channel.basicConsume(this.id+jobGroupRI.getName(), true, deliverCallback, consumerTag -> { });
+    channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
 }
 
     public void algoritmo(String message,  String qeue , CrossoverStrategies strat){

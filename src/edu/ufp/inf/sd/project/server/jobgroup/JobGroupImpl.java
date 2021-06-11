@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 
 
 public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
-    private static final String QUEUE_NAME = "jssp_ga";
+    private static final String EXCHANGE_NAME = "jssp_ga";
     transient private static int nGroups = 0;
 
     private ArrayList<String> filas = new ArrayList<String>();
@@ -54,54 +54,59 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         this.strat = strat;
         this.makespan = new HashMap<>();
         this.workers = new HashMap<>();
-        this.exchangeName = "exchange_" + this.id + "_" + this.name;
+        //this.exchangeName = "exchange_" + this.id + "_" + this.name;
         // GROUP STARTING STATUS
         this.groupStatusState = new GroupStatusState("CONTINUE");
-        this.groupInfoState = new GroupInfoState(path,this.exchangeName);
+        this.groupInfoState = new GroupInfoState(path,EXCHANGE_NAME);
         SendJobs();
 
     }
     public void producer(String id){
+        //Connection connection=null;
+        //Channel channel=null;
+
+        /* Create a connection to the server (abstracts the socket connection,
+           protocol version negotiation and authentication, etc.) */
         ConnectionFactory factory=new ConnectionFactory();
         factory.setHost("localhost");
         factory.setUsername("guest");
         factory.setPassword("guest");
+        //factory.setPassword("guest4rabbitmq");
 
+        /* try-with-resources\. will close resources automatically in reverse order... avoids finally */
         try (//Create a channel, which is where most of the API resides
              Connection connection=factory.newConnection();
              Channel channel=connection.createChannel()
         ) {
+            /* We must declare a queue to send to; this is idempotent, i.e.,
+            it will only be created if it doesn't exist already;
+            then we can publish a message to the queue; The message content is a
+            byte array (can encode whatever we need). */
 
-            channel.queueDeclare(id+this.name, false, false, false, null);
-            String qeue = id+this.name;
-            this.filas.add(qeue);
-            channel.exchangeDeclare(this.exchangeName, "direct");
-            channel.queueBind(id+this.name, this.exchangeName, id+this.name);
+            //channel.queueDeclare(id+this.name, false, false, false, null);
+            //channel.exchangeDeclare(this.exchangeName, "direct");
+            //channel.queueBind(id+this.name, this.exchangeName, id+this.name);
+            channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
             //channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-            consume_results(id);
+            //channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
             //Enviar o path
-            String message = path ;
-
-            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
+            String message = path;
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
             System.out.println(" [x] Sent '" + message + "'");
 
 
-            //Enviar as strats
-            message = String.valueOf(CrossoverStrategies.TWO.strategy);
-            System.out.println(" [x] Sent strat '" + message + "'");
-            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
-
-            Thread.currentThread().sleep(6000);
-
-            message = String.valueOf(CrossoverStrategies.THREE.strategy);
-            System.out.println(" [x] Sent strat '" + message + "'");
-            channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
-
-            Thread.currentThread().sleep(6000);
-
-        } catch (IOException | TimeoutException | InterruptedException e) {
+        } catch (IOException | TimeoutException e) {
             Logger.getLogger(this.name).log(Level.INFO, e.toString());
-        }
+        } /* The try-with-resources will close resources automatically in reverse order
+            finally {
+            try {
+                // Lastly, we close the channel and the connection
+                if (channel != null) { channel.close(); }
+                if (connection != null) { connection.close(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } */
     }
 
     private void consume_results(String id) {
