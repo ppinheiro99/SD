@@ -32,7 +32,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     private ArrayList<String> filas = new ArrayList<String>();
     transient private final HashMap<String, WorkerRI> workers;
-    private final HashMap<String, ArrayList<Integer>> makespan;
+    private final HashMap<String, Integer> makespan;
     private GroupInfoState groupInfoState;
     private GroupStatusState groupStatusState;
     // JobGroup Info
@@ -261,12 +261,12 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         server_says("Jobs Sent");
     }
 
-    public void receiveResults(String id , ArrayList<Integer> makespans) {
+    public void receiveResults(String id , int makespan) {
         server_says("Getting the result from " + id);
         ///Se o nosso worker estiver associado ao jobgroup
         if(this.workers.containsKey(id)){
             ///Atualizamos o nosso hashmap de resultados(makespan)
-            this.makespan.put(id,makespans);
+            this.makespan.put(id,makespan);
 
         }
 
@@ -427,29 +427,21 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-            for(Map.Entry<String, ArrayList<Integer>> entry : this.makespan.entrySet()) {
+            for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
                 String key = entry.getKey();
-                ArrayList<Integer> value = entry.getValue();
+                Integer value = entry.getValue();
 
+                this.workers.get(entry.getKey()).receiveCoins(ficheiros.size());
 
-                //Cada worker recebe 1 por cada ficheiro
-                int numero_ficheiros=1;
-                for (ArrayList<Integer> arrayList: makespan.values()) {
-                    numero_ficheiros=arrayList.size();
-                    break;
-                }
-
-                this.workers.get(entry.getKey()).receiveCoins(numero_ficheiros);
-
-                 int media = (int) value.stream().mapToInt(val -> val).average().orElse(0.0);
+                 //int media = (int) value.stream().mapToInt(val -> val).average().orElse(0.0);
 
                 if(aux == 0){
-                    aux = media;
+                    aux = value;
                     winner = key;
 
                 }
-                if(media < aux){
-                    aux = media;
+                if(value < aux){
+                    aux = value;
                     winner = key;
 
                 }
