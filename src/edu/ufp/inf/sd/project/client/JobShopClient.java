@@ -430,9 +430,12 @@ public class JobShopClient{
                 System.out.println(name);
 
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
+
             if(jobGroupRI!=null){
-                GroupStatusState s = new GroupStatusState("PAUSE");
-                jobGroupRI.setState(s);
+                if(jobGroupRI.getOwner().compareTo(this.sessionRI.showMyUsername())==0){
+                    GroupStatusState s = new GroupStatusState("PAUSE");
+                    jobGroupRI.setState(s);
+                }
             }
         }
     }
@@ -475,8 +478,10 @@ public class JobShopClient{
             System.out.print("\nNome do Grupo: ");
             String name = scanner.nextLine();
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
-            this.sessionRI.deleteJobGroup(Integer.parseInt(name));
-            System.out.println("JobGroup apagado com sucesso!");
+            if(jobGroupRI.getOwner().compareTo(this.sessionRI.showMyUsername())==0){ this.sessionRI.deleteJobGroup(Integer.parseInt(name));
+                System.out.println("JobGroup apagado com sucesso!");}
+
+
 
         }
     }
@@ -491,9 +496,13 @@ public class JobShopClient{
                 System.out.println(name);
 
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
+
             if(jobGroupRI!=null){
-                GroupStatusState s = new GroupStatusState("CONTINUE");
-                jobGroupRI.setState(s);
+                if(jobGroupRI.getOwner().compareTo(this.sessionRI.showMyUsername())==0){
+                    GroupStatusState s = new GroupStatusState("CONTINUE");
+                    jobGroupRI.setState(s);
+                }
+
             }
         }
     }

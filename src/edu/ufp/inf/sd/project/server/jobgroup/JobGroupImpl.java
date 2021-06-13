@@ -1,16 +1,9 @@
 package edu.ufp.inf.sd.project.server.jobgroup;
 
 import com.rabbitmq.client.*;
-import edu.ufp.inf.sd.RabbitUtils;
-import edu.ufp.inf.sd.project.client.WorkerImpl;
 import edu.ufp.inf.sd.project.client.WorkerRI;
-import edu.ufp.inf.sd.project.producer.Producer;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
-import edu.ufp.inf.sd.project.util.geneticalgorithm.CrossoverStrategies;
-import edu.ufp.inf.sd.project.util.geneticalgorithm.GeneticAlgorithmJSSP;
-import edu.ufp.inf.sd.rmi._05_observer.server.State;
-import edu.ufp.inf.sd.rmi._05_observer.server.SubjectImpl;
 
 
 import java.io.IOException;
@@ -21,8 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
@@ -402,7 +393,8 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     public void setState(GroupStatusState s) throws RemoteException{
         System.out.println("\nSet state ...");
         this.groupStatusState = s;
-        //this.notifyAllObservers();
+
+        this.notifyAllObservers(this.groupStatusState.getStatus());
     }
 
 
