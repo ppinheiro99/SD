@@ -46,7 +46,7 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
 
 public void testerabbit() throws IOException, TimeoutException {
 
-
+    String resultsQueue = EXCHANGE_NAME + "_results";
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost("localhost");
     factory.setUsername("guest");
@@ -54,32 +54,36 @@ public void testerabbit() throws IOException, TimeoutException {
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
 
-    //channel.exchangeDeclare(groupInfoState.getExchangeName(),"direct");
-    // channel.queueBind(this.id+jobGroupRI.getName(), groupInfoState.getExchangeName(), this.id+jobGroupRI.getName());
+
+    channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
+    String queueName = channel.queueDeclare().getQueue();
+    channel.queueBind(queueName, EXCHANGE_NAME, "");
 
 
-    //String queueName = channel.queueDeclare().getQueue();
-    //channel.exchangeDeclare(queueName, "fanout");
-    //channel.queueBind (EXCHANGE_NAME, groupInfoState.getExchangeName(), "" );
-
-    String resultsQueue = EXCHANGE_NAME + "_results";
-    channel.exchangeDeclare(resultsQueue, "fanout");
-    //channel.queueDeclare(resultsQueue, false, false, false, null);
+    channel.queueDeclare(EXCHANGE_NAME, false, false, false, null);
+    channel.queueDeclare(resultsQueue, false, false, false, null);
 
     System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), "UTF-8");
-        algoritmo(message,EXCHANGE_NAME,CrossoverStrategies.ONE);
         System.out.println(" [x] Received '" + delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
+        algoritmo(message,EXCHANGE_NAME,CrossoverStrategies.ONE);
+    };
+    channel.basicConsume(EXCHANGE_NAME, true, deliverCallback, consumerTag -> {});
+
+    DeliverCallback deliverCallback1 = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), "UTF-8");
         System.out.println("teste !!!! : "+message);
     };
-    channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> {});
+
+    channel.basicConsume(resultsQueue, true, deliverCallback1, consumerTag -> {});
 }
 
     public void algoritmo(String message,  String qeue , CrossoverStrategies strat){
         GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(message,qeue, strat);
         ga.run();
+        System.out.println("ga.run()");
     }
 
     public String getUser() {

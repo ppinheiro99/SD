@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private static final String EXCHANGE_NAME = "jssp_ga";
+   // private static final String WORKERS_RESULTS = "workers_results";
     transient private static int nGroups = 0;
 
     private ArrayList<String> filas = new ArrayList<String>();
@@ -62,51 +63,33 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     }
     public void producer(String id){
-        //Connection connection=null;
-        //Channel channel=null;
-
-        /* Create a connection to the server (abstracts the socket connection,
-           protocol version negotiation and authentication, etc.) */
         ConnectionFactory factory=new ConnectionFactory();
         factory.setHost("localhost");
         factory.setUsername("guest");
         factory.setPassword("guest");
-        //factory.setPassword("guest4rabbitmq");
 
-        /* try-with-resources\. will close resources automatically in reverse order... avoids finally */
-        try (//Create a channel, which is where most of the API resides
+        try (
              Connection connection=factory.newConnection();
              Channel channel=connection.createChannel()
-        ) {
-            /* We must declare a queue to send to; this is idempotent, i.e.,
-            it will only be created if it doesn't exist already;
-            then we can publish a message to the queue; The message content is a
-            byte array (can encode whatever we need). */
-
-            //channel.queueDeclare(id+this.name, false, false, false, null);
-            //channel.exchangeDeclare(this.exchangeName, "direct");
-            //channel.queueBind(id+this.name, this.exchangeName, id+this.name);
+        ){
             channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
-            //channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-            //channel.basicPublish(this.exchangeName, id+this.name, null, message.getBytes("UTF-8"));
-            //Enviar o path
+            channel.queueDeclare(EXCHANGE_NAME, false, false, false, null);
             String message = path;
-            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+
+            channel.basicPublish("", EXCHANGE_NAME, null, message.getBytes("UTF-8"));
             System.out.println(" [x] Sent '" + message + "'");
             Thread.currentThread().sleep(2000);
 
+           // DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+          //      String message1 = new String(delivery.getBody(), "UTF-8");
+          //      System.out.println(" [x] Received '" + delivery.getEnvelope().getRoutingKey() + "':'" + message1 + "'");
+          //  };
+            //channel.queueDeclare(WORKERS_RESULTS, false, false, false, null);
+           // channel.basicConsume(WORKERS_RESULTS, true, deliverCallback, consumerTag -> {});
+
         } catch (IOException | TimeoutException | InterruptedException e) {
             Logger.getLogger(this.name).log(Level.INFO, e.toString());
-        } /* The try-with-resources will close resources automatically in reverse order
-            finally {
-            try {
-                // Lastly, we close the channel and the connection
-                if (channel != null) { channel.close(); }
-                if (connection != null) { connection.close(); }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } */
+        }
     }
 
     private void consume_results(String id) {
@@ -156,11 +139,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         }
     }
 
-
-    public static void sendMessage(Channel channel, String message,String q) throws IOException {
-        channel.basicPublish("", q, null, message.getBytes("UTF-8"));
-        System.out.println(" [x] Sent '" + message + "'");
-    }
 
     public void SendJobs() {
         server_says("Sending the jobs");
