@@ -12,7 +12,7 @@
 
 @REM ======================== CHANGE BELOW ACCORDING YOUR PROJECT and PC SETTINGS ========================
 @REM ==== PC STUFF ====
-@Set USERNAME=ppinh
+@Set USERNAME=jotaSV
 
 @Set WORKDRIVE=C
 @Set JDK=C:\Program Files\Java\jdk-16.0.1
@@ -24,7 +24,7 @@
 
 @REM ==== JAVA NAMING STUFF ====
 @Set JAVAPROJ_NAME=SD
-@set JAVAPROJ=%WORKDRIVE%:\\Users\\%USERNAME%\\IdeaProjects\\%JAVAPROJ_NAME%
+@set JAVAPROJ=%WORKDRIVE%:\\Users\\%USERNAME%\\Documents\\Github\\%JAVAPROJ_NAME%
 @Set PACKAGE=project
 @Set PACKAGE_PREFIX=edu.ufp.inf.sd
 @Set PACKAGE_PREFIX_FOLDERS=edu/ufp/inf/sd
@@ -100,7 +100,7 @@ IF "%CURRENT_IDE%"=="%INTELLIJ%" (
 @Set SERVER_CODEBASE=http://%SERVER_CODEBASE_HOST%:%SERVER_CODEBASE_PORT%/%JAVAPROJ_JAR_FILE%
 @Set CLIENT_CODEBASE=http://%CLIENT_CODEBASE_HOST%:%CLIENT_CODEBASE_PORT%/%JAVAPROJ_JAR_FILE%
 @Set JAVA_LIB_FOLDER=%JAVAPROJ%\\%JAVAPROJ_DIST_LIB%
-@Set JAVA_RABBITMQ_TOOLS=%JAVA_LIB_FOLDER%\\amqp-client-5.11.0.jar;%JAVA_LIB_FOLDER%\\slf4j-api-1.7.30.jar;%JAVA_LIB_FOLDER%\\slf4j-simple-1.7.30.jar;%JAVA_LIB_FOLDER%\\jjwt-api-0.11.1.jar;%JAVA_LIB_FOLDER%\\jackson-core-2.9.10.jar;%JAVA_LIB_FOLDER%\\jackson-annotations-2.9.10.jar;%JAVA_LIB_FOLDER%\\jackson-databind-2.9.10.4.jar;%JAVA_LIB_FOLDER%\\jjwt-impl-0.10.1.jar;%JAVA_LIB_FOLDER%\\jjwt-jackson-0.11.2.jar;%JAVA_LIB_FOLDER%\\jjwt-0.9.1.jar;
+@Set JAVA_RABBITMQ_TOOLS=%JAVA_LIB_FOLDER%\\amqp-client-5.11.0.jar;%JAVA_LIB_FOLDER%\\slf4j-api-1.7.30.jar;%JAVA_LIB_FOLDER%\\slf4j-simple-1.7.30.jar
 
 @REM Set CLASSPATH=%JAVAPROJ_CLASSES_FOLDER%;JAVA_RABBITMQ_TOOLS%
 @REM Set CLASSPATH=%JAVAPROJ_JAR_FILE%

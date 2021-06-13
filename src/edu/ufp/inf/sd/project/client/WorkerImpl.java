@@ -6,6 +6,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
+import edu.ufp.inf.sd.project.producer.Producer;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
@@ -46,7 +47,7 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
 
 public void testerabbit() throws IOException, TimeoutException {
 
-    String resultsQueue = EXCHANGE_NAME + "_results";
+
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost("localhost");
     factory.setUsername("guest");
@@ -61,9 +62,13 @@ public void testerabbit() throws IOException, TimeoutException {
 
 
     channel.queueDeclare(EXCHANGE_NAME, false, false, false, null);
-    channel.queueDeclare(resultsQueue, false, false, false, null);
+
 
     System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+
+
+
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), "UTF-8");
@@ -72,18 +77,57 @@ public void testerabbit() throws IOException, TimeoutException {
     };
     channel.basicConsume(EXCHANGE_NAME, true, deliverCallback, consumerTag -> {});
 
-    DeliverCallback deliverCallback1 = (consumerTag, delivery) -> {
-        String message = new String(delivery.getBody(), "UTF-8");
-        System.out.println("teste !!!! : "+message);
-    };
-
-    channel.basicConsume(resultsQueue, true, deliverCallback1, consumerTag -> {});
 }
 
     public void algoritmo(String message,  String qeue , CrossoverStrategies strat){
         GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(message,qeue, strat);
+        consume_results();
         ga.run();
         System.out.println("ga.run()");
+    }
+
+    private void consume_results() {
+        try {
+            /* Open a connection and a channel, and declare the queue from which to consume.
+            Declare the queue here, as well, because we might start the client before the publisher. */
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost("localhost");
+            //Use same username/passwd as the for accessing Management UI @ http://localhost:15672/
+            //Default credentials are: guest/guest (change accordingly)
+            factory.setUsername("guest");
+            factory.setPassword("guest");
+            //factory.setPassword("guest4rabbitmq");
+            Connection connection=factory.newConnection();
+            Channel channel=connection.createChannel();
+
+            String resultsQueue = Producer.QUEUE_NAME + "_results";
+
+            channel.queueDeclare(resultsQueue, false, false, false, null);
+            //channel.queueDeclare(Producer.QUEUE_NAME, true, false, false, null);
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+            /* The server pushes messages asynchronously, hence we provide a
+            DefaultConsumer callback that will buffer the messages until we're ready to use them.
+            Consumer client = new DefaultConsumer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    String message=new String(body, "UTF-8");
+                    System.out.println(" [x] Received '" + message + "'");
+                }
+            };
+            channel.basicConsume(Producer.QUEUE_NAME, true, client    );
+            */
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+            };
+            channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> { });
+
+        } catch (Exception e){
+            //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());
+            e.printStackTrace();
+        }
     }
 
     public String getUser() {
