@@ -13,9 +13,13 @@ import edu.ufp.inf.sd.project.util.geneticalgorithm.CrossoverStrategies;
 import edu.ufp.inf.sd.project.util.geneticalgorithm.GeneticAlgorithmJSSP;
 import edu.ufp.inf.sd.project.util.tabusearch.TabuSearchJSSP;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -41,46 +45,13 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         this.groupInfoState = this.jobGroupRI.attach(this);
 
 
-    //rabbito();
-        //testerabbit();
+
 
 
     }
     public static void main(String[] args){}
 
-public void testerabbit() throws IOException, TimeoutException {
 
-    ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("localhost");
-    Connection connection = factory.newConnection();
-    Channel channel = connection.createChannel();
-
-    channel.exchangeDeclare(groupInfoState.getExchangeName(),"direct");
-    //String queueName = channel.queueDeclare().getQueue();
-    channel.queueBind(this.id+jobGroupRI.getName(), groupInfoState.getExchangeName(), this.id+jobGroupRI.getName());
-
-    System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
-    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-        String message = new String(delivery.getBody(), "UTF-8");
-
-        System.out.println(" [x] Received '" +
-                delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
-            if(message.compareTo("1")!=0 || message.compareTo("2")!=0 || message.compareTo("3")!=3 || message.compareTo("stop")!=0){
-
-                algoritmo(message,this.id+jobGroupRI.getName(),CrossoverStrategies.ONE);
-            }
-
-
-
-
-    };
-    channel.basicConsume(this.id+jobGroupRI.getName(), true, deliverCallback, consumerTag -> { });
-
-
-
-
-}
 
     public void algoritmo(String message,  String qeue , CrossoverStrategies strat){
         GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(message,qeue, strat);
@@ -129,7 +100,7 @@ public void testerabbit() throws IOException, TimeoutException {
 
         for (String ficheiro: ficheiros) {
             int indice = makespans.size()+1;
-            String jsspInstancePath ="edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/ficheiro_recevido_"+indice+".txt";
+            String jsspInstancePath ="edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/ficheiro_recebido_"+indice+".txt";
             File file = new File(jsspInstancePath);
             try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
                 out.print(ficheiro);
@@ -139,41 +110,33 @@ public void testerabbit() throws IOException, TimeoutException {
 
 
 
-       /* System.out.println("ficheiro recebido:");
-        System.out.println(ficheiro);
-        System.out.println(jsspInstancePath);*/
 
-        /*
-        //Create the file
-        if (file.createNewFile())
-        {
-            System.out.println("File is created!");
-        } else {
-            System.out.println("File already exists.");
-        }
-*/
 
         try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
             out.print(ficheiro);
             out.flush();
-            out.close();
+
         }
 
 
         TabuSearchJSSP ts = new TabuSearchJSSP(jsspInstancePath);
         int makespan = ts.run();
-
+        makespans.add(makespan);
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "[TS] Makespan for {0} = {1}", new Object[]{jsspInstancePath,String.valueOf(makespan)});
 
         }
 
-        int makespan = (int) makespans.stream().mapToInt(val -> val).average().orElse(0.0);
+        int i = 0,media = 0;
+        while(i < makespans.size()){
+            media = media + makespans.get(i);
+            i++;
+        }
+        media = media / makespans.size();
+
+        workerSays("Job Done! Makespan average was :" + media);
 
 
-        workerSays("Job Done! Makespan average was :" + makespan);
-
-
-        return makespan;
+        return media;
     }
 
     /*
