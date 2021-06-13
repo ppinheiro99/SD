@@ -227,7 +227,16 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-    public void receiveResults(String id , Integer makespan) {
+            } catch (IOException | InterruptedException | TimeoutException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        server_says("Jobs Sent");
+    }
+
+    public void receiveResults(String id , int makespan) {
         server_says("Getting the result from " + id);
         ///Se o nosso worker estiver associado ao jobgroup
         if(this.workers.containsKey(id)){
@@ -376,7 +385,10 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
                 String key = entry.getKey();
                 Integer value = entry.getValue();
-                //Cada worker recebe 1 pelo trabalho
+
+                this.workers.get(entry.getKey()).receiveCoins(ficheiros.size());
+
+                 //int media = (int) value.stream().mapToInt(val -> val).average().orElse(0.0);
 
                 this.workers.get(entry.getKey()).receiveCoins(1);
                 if(aux == 0){
@@ -385,7 +397,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
                 }
                 if(value < aux){
-
                     aux = value;
                     winner = key;
 

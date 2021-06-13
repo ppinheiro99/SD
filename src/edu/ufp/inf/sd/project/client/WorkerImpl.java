@@ -104,7 +104,7 @@ public void testerabbit() throws IOException, TimeoutException {
 
     public void receiveJob(GroupInfoState groupInfoState) throws IOException {
         //Recebemos o nosso job a desempenhar , executamos e enviamos  o resultado para o jobgroup
-        Integer makespan = processJob(groupInfoState.getPath());
+        int makespan = processJob(groupInfoState.getPath());
         jobGroupRI.receiveResults(this.id,makespan);
 
     }
@@ -121,14 +121,58 @@ public void testerabbit() throws IOException, TimeoutException {
     /*
      * Process and do the job received from jobGroup.
      */
-    private int processJob(String jsspInstancePath) throws IOException {
+    private int processJob(ArrayList<String> ficheiros) throws IOException {
+        File pasta = new File("edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/");
+        ArrayList<Integer> makespans = new ArrayList<>();
+        if (!pasta.exists()) pasta.mkdirs();
+
+
+        for (String ficheiro: ficheiros) {
+            int indice = makespans.size()+1;
+            String jsspInstancePath ="edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/ficheiro_recevido_"+indice+".txt";
+            File file = new File(jsspInstancePath);
+            try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
+                out.print(ficheiro);
+                out.flush();
+                out.close();
+            }
+
+
+
+       /* System.out.println("ficheiro recebido:");
+        System.out.println(ficheiro);
+        System.out.println(jsspInstancePath);*/
+
+        /*
+        //Create the file
+        if (file.createNewFile())
+        {
+            System.out.println("File is created!");
+        } else {
+            System.out.println("File already exists.");
+        }
+*/
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
+            out.print(ficheiro);
+            out.flush();
+            out.close();
+        }
 
 
         TabuSearchJSSP ts = new TabuSearchJSSP(jsspInstancePath);
         int makespan = ts.run();
 
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "[TS] Makespan for {0} = {1}", new Object[]{jsspInstancePath,String.valueOf(makespan)});
-        workerSays("Job Done! Makespan was :" + makespan);
+
+        }
+
+        int makespan = (int) makespans.stream().mapToInt(val -> val).average().orElse(0.0);
+
+
+        workerSays("Job Done! Makespan average was :" + makespan);
+
+
         return makespan;
     }
 
