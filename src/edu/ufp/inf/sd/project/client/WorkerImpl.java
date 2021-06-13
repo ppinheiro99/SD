@@ -47,43 +47,37 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
 
 public void testerabbit() throws IOException, TimeoutException {
 
-
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost("localhost");
-    factory.setUsername("guest");
-    factory.setPassword("guest");
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
-
 
     channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
     String queueName = channel.queueDeclare().getQueue();
     channel.queueBind(queueName, EXCHANGE_NAME, "");
 
-
-    channel.queueDeclare(EXCHANGE_NAME, false, false, false, null);
-
-
     System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
-
-
-
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), "UTF-8");
         System.out.println(" [x] Received '" + delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
-        algoritmo(message,EXCHANGE_NAME,CrossoverStrategies.ONE);
-    };
-    channel.basicConsume(EXCHANGE_NAME, true, deliverCallback, consumerTag -> {});
+        if(message.compareTo("2")==0 ||message.compareTo("stop")==0 || message.compareTo("3")==0 ){
 
+        }else {
+            algoritmo(message,EXCHANGE_NAME,CrossoverStrategies.ONE);
+        }
+
+    };
+    channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
 }
+
+
 
     public void algoritmo(String message,  String qeue , CrossoverStrategies strat){
         GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(message,qeue, strat);
         consume_results();
         ga.run();
-        System.out.println("ga.run()");
+
     }
 
     private void consume_results() {
@@ -103,6 +97,9 @@ public void testerabbit() throws IOException, TimeoutException {
             String resultsQueue = Producer.QUEUE_NAME + "_results";
 
             channel.queueDeclare(resultsQueue, false, false, false, null);
+            String sendResults = "sendresults";
+            channel.queueDeclare(sendResults, false, false, false, null);
+
             //channel.queueDeclare(Producer.QUEUE_NAME, true, false, false, null);
             System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
@@ -121,8 +118,11 @@ public void testerabbit() throws IOException, TimeoutException {
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + message + "'");
+                channel.basicPublish("", sendResults, null, message.getBytes("UTF-8"));
+                System.out.println(" [x] Sent '" + message + "'");
             };
             channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> { });
+
 
         } catch (Exception e){
             //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());

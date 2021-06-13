@@ -76,19 +76,69 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             channel.queueDeclare(EXCHANGE_NAME, false, false, false, null);
             String message = path;
 
-            channel.basicPublish("", EXCHANGE_NAME, null, message.getBytes("UTF-8"));
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+            //channel.basicPublish("", EXCHANGE_NAME, null, message.getBytes("UTF-8"));
             System.out.println(" [x] Sent '" + message + "'");
-            Thread.currentThread().sleep(2000);
+            Thread.currentThread().sleep(50);
 
-           // DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-          //      String message1 = new String(delivery.getBody(), "UTF-8");
-          //      System.out.println(" [x] Received '" + delivery.getEnvelope().getRoutingKey() + "':'" + message1 + "'");
-          //  };
-            //channel.queueDeclare(WORKERS_RESULTS, false, false, false, null);
-           // channel.basicConsume(WORKERS_RESULTS, true, deliverCallback, consumerTag -> {});
+
+            getResults();
+
 
         } catch (IOException | TimeoutException | InterruptedException e) {
             Logger.getLogger(this.name).log(Level.INFO, e.toString());
+        }
+    }
+
+    private void getResults() {
+        try {
+            Thread.currentThread().sleep(10000);
+            /* Open a connection and a channel, and declare the queue from which to consume.
+            Declare the queue here, as well, because we might start the client before the publisher. */
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost("localhost");
+            //Use same username/passwd as the for accessing Management UI @ http://localhost:15672/
+            //Default credentials are: guest/guest (change accordingly)
+            factory.setUsername("guest");
+            factory.setPassword("guest");
+            //factory.setPassword("guest4rabbitmq");
+            Connection connection=factory.newConnection();
+            Channel channel=connection.createChannel();
+
+
+            String sendResults = "sendresults";
+            channel.queueDeclare(sendResults, false, false, false, null);
+
+            //channel.queueDeclare(Producer.QUEUE_NAME, true, false, false, null);
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+            /* The server pushes messages asynchronously, hence we provide a
+            DefaultConsumer callback that will buffer the messages until we're ready to use them.
+            Consumer client = new DefaultConsumer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    String message=new String(body, "UTF-8");
+                    System.out.println(" [x] Received '" + message + "'");
+                }
+            };
+            channel.basicConsume(Producer.QUEUE_NAME, true, client    );
+            */
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+
+            };
+            channel.basicConsume(sendResults, true, deliverCallback, consumerTag -> { });
+            String message = "stop";
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+            //channel.basicPublish("", EXCHANGE_NAME, null, message.getBytes("UTF-8"));
+            System.out.println(" [x] Sent '" + message + "'");
+
+
+        } catch (Exception e){
+            //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());
+            e.printStackTrace();
         }
     }
 
