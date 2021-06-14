@@ -9,6 +9,9 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 
+
+
+
 public class AuthFactoryImpl extends UnicastRemoteObject implements AuthFactoryRI {
 
     private DBMockup db;
@@ -30,6 +33,7 @@ public class AuthFactoryImpl extends UnicastRemoteObject implements AuthFactoryR
             this.db.register(username,password);
             return true;
         }
+
 
         return false;
     }

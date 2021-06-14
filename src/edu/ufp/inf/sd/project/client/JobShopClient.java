@@ -5,7 +5,10 @@ import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.server.user.User;
+import edu.ufp.inf.sd.rabbitmqservices.util.JwtToken;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
+import org.jose4j.jwt.MalformedClaimException;
+import org.jose4j.lang.JoseException;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -133,6 +136,10 @@ public class JobShopClient{
                 e.printStackTrace();
             } catch (TimeoutException | InterruptedException e) {
                 e.printStackTrace();
+            } catch (MalformedClaimException e) {
+                e.printStackTrace();
+            } catch (JoseException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -140,7 +147,7 @@ public class JobShopClient{
     /*
      *  Show initial menu
      */
-    public boolean menu_login() throws RemoteException {
+    public boolean menu_login() throws RemoteException, MalformedClaimException, JoseException {
         System.out.println("\nAUTH:");
         System.out.println("[1] - Registry");
         System.out.println("[2] - Login");
@@ -187,24 +194,33 @@ public class JobShopClient{
     /*
      *  Login user
      */
-    private boolean user_login() throws RemoteException {
+    private boolean user_login() throws RemoteException, MalformedClaimException, JoseException {
         System.out.print("Username: ");
         String username = scanner.nextLine();
 
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
+        JwtToken jdt= new JwtToken(username,password);
+        String token= jdt.encode();
+        jdt.decode(token);
+        //JwtToken.teste();
 
-        sessionRI = authRI.login(username, password);
+
+        sessionRI = authRI.login(token);
 
         if(sessionRI != null){
             System.out.println("Sessao iniciada com sucesso!");
+
             return true;
         }
         else {
             System.out.println("Erro ao iniciar sessao!");
             return false;
         }
+
+
+
     }
 
     /*
