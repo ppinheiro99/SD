@@ -59,7 +59,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         // GROUP STARTING STATUS
         this.groupStatusState = new GroupStatusState("CONTINUE");
         this.groupInfoState = new GroupInfoState(path,EXCHANGE_NAME);
-        SendJobs();
+
 
     }
     public void producer(String id){
@@ -72,18 +72,58 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
              Connection connection=factory.newConnection();
              Channel channel=connection.createChannel()
         ){
+            String qeue = id+this.name;
             channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
-            channel.queueDeclare(EXCHANGE_NAME, false, false, false, null);
+            channel.queueDeclare(qeue, false, false, false, null);
+            //channel.queueDeclare(EXCHANGE_NAME, false, false, false, null);
             String message = path;
-
+            Thread.currentThread().sleep(2000);
             channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
             //channel.basicPublish("", EXCHANGE_NAME, null, message.getBytes("UTF-8"));
             System.out.println(" [x] Sent '" + message + "'");
-            Thread.currentThread().sleep(50);
-
 
             getResults();
 
+            Thread.currentThread().sleep(10000);
+            message = "2";
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+
+            System.out.println(" [x] Sent '" + message + "'");
+            message = "2";
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+
+            System.out.println(" [x] Sent '" + message + "'");
+            int i = 0 ;
+            while(i<20000000){
+                i++;
+            }
+            Thread.currentThread().sleep(10000);
+            message = "3";
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+
+            System.out.println(" [x] Sent '" + message + "'");
+            message = "3";
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+
+            System.out.println(" [x] Sent '" + message + "'");
+            i = 0 ;
+            while(i<20000000){
+                i++;
+            }
+            Thread.currentThread().sleep(10000);
+            message = "stop";
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+
+            System.out.println(" [x] Sent '" + message + "'");
+            message = "stop";
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+
+            System.out.println(" [x] Sent '" + message + "'");
+
+            i = 0 ;
+            while(i<20000000){
+                i++;
+            }
 
         } catch (IOException | TimeoutException | InterruptedException e) {
             Logger.getLogger(this.name).log(Level.INFO, e.toString());
@@ -92,7 +132,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
     private void getResults() {
         try {
-            Thread.currentThread().sleep(10000);
+
             /* Open a connection and a channel, and declare the queue from which to consume.
             Declare the queue here, as well, because we might start the client before the publisher. */
             ConnectionFactory factory = new ConnectionFactory();
@@ -128,12 +168,13 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + message + "'");
 
+
+
             };
+
+
             channel.basicConsume(sendResults, true, deliverCallback, consumerTag -> { });
-            String message = "stop";
-            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
-            //channel.basicPublish("", EXCHANGE_NAME, null, message.getBytes("UTF-8"));
-            System.out.println(" [x] Sent '" + message + "'");
+
 
 
         } catch (Exception e){
@@ -142,80 +183,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         }
     }
 
-    private void consume_results(String id) {
-        try {
-            /* Open a connection and a channel, and declare the queue from which to consume.
-            Declare the queue here, as well, because we might start the client before the publisher. */
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("localhost");
-            //Use same username/passwd as the for accessing Management UI @ http://localhost:15672/
-            //Default credentials are: guest/guest (change accordingly)
-            factory.setUsername("guest");
-            factory.setPassword("guest");
-            //factory.setPassword("guest4rabbitmq");
-            Connection connection=factory.newConnection();
-            Channel channel=connection.createChannel();
 
-            String resultsQueue = id+this.name + "_results";
-
-            channel.queueDeclare(resultsQueue, false, false, false, null);
-            //channel.queueDeclare(Producer.QUEUE_NAME, true, false, false, null);
-            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String message = new String(delivery.getBody(), "UTF-8");
-                System.out.println(" [x] Received from worker  '"+ id +":" + message + "'");
-                if(message.compareTo("Setting Strategy 1")!=0 && message.compareTo("Setting Strategy 2")!=0 && message.compareTo("Setting Strategy 3")!=0){
-                    String[] parts = message.split("=");
-                    String parts1 = parts[1];
-                    //System.out.println(" [x] Depois do split  :" + parts1 + "'");
-                    String[] parts2 = parts1.split(" ");
-                    String parts3 = parts[1];
-
-                    //Se o makespan que recebemos for menor que o que temos para este worker , atualizamos
-                    if(this.makespan.get(id)==null){
-                        this.makespan.put(id,Integer.parseInt(parts3.substring(1)));
-                    }else if(this.makespan.get(id) > Integer.parseInt(parts3.substring(1) )){
-                        this.makespan.replace(id,Integer.parseInt(parts3.substring(1)));
-                    }
-                }
-            };
-            channel.basicConsume(resultsQueue, true, deliverCallback, consumerTag -> { });
-            verify_winner();
-
-        } catch (Exception e){
-            //Logger.getLogger(Recv.class.getName()).log(Level.INFO, e.toString());
-            e.printStackTrace();
-        }
-    }
-
-
-    public void SendJobs() {
-        server_says("Sending the jobs");
-
-        ///Mandamos os detalhes do job a cada worker
-        this.workers.forEach((id, workerRI) -> {
-            try {
-                ///Antes de enviarmos jobs para cada worker temos que verificar que temos plafon suficiente.
-                if(this.coins > 10){
-                    //Enviamos o job e ele executa
-                    //Falta adicionar ao saldo do user!!!!!
-                    this.coins--;
-                    workerRI.receiveJob(this.groupInfoState);
-                }else {
-                    ///Entra aqui assim que as coins forem 10 , verificamos quem tem a melhor solução
-                    verify_winner();
-                    //Falta a parte de meter o saldo ao vencedor
-                }
-
-            } catch (IOException | InterruptedException | TimeoutException e) {
-                e.printStackTrace();
-            }
-
-        });
-
-        server_says("Jobs Sent");
-    }
 
     public void receiveResults(String id , Integer makespan) {
         server_says("Getting the result from " + id);
@@ -452,7 +420,16 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 workerRI.setId(newID);
                 //Antes de darmos o trabalho ao worker , temos que abrir o canal de comunicaçao , chamando o producer
                 this.coins--;
-                producer(newID);
+                String finalNewID = newID;
+                Thread thread = new Thread(){
+                    public void run(){
+                        System.out.println("Thread Running");
+                        producer(finalNewID);
+                    }
+                };
+                thread.start();
+
+
                 //this.workers.get(newID).receiveJob(this.groupInfoState);
                 return this.groupInfoState;
             }else {

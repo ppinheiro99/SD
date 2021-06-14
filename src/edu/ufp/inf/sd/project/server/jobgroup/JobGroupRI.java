@@ -31,6 +31,4 @@ public interface JobGroupRI extends Remote {
 
 
 
-    public void SendJobs() throws RemoteException;
-
 }

@@ -53,7 +53,8 @@ public void testerabbit() throws IOException, TimeoutException {
     Channel channel = connection.createChannel();
 
     channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
-    String queueName = channel.queueDeclare().getQueue();
+    String queueName = this.id+jobGroupRI.getName();
+    //String queueName = channel.queueDeclare().getQueue();
     channel.queueBind(queueName, EXCHANGE_NAME, "");
 
     System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
@@ -61,10 +62,16 @@ public void testerabbit() throws IOException, TimeoutException {
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), "UTF-8");
         System.out.println(" [x] Received '" + delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
-        if(message.compareTo("2")==0 ||message.compareTo("stop")==0 || message.compareTo("3")==0 ){
+        if(message.compareTo("2")==0  || message.compareTo("3")==0 ){
 
-        }else {
-            algoritmo(message,EXCHANGE_NAME,CrossoverStrategies.ONE);
+
+
+        }else if (message.compareTo("stop")==0){
+            System.out.println("Killing myself...");
+            Thread.currentThread().interrupt();
+        } else{
+
+            algoritmo(message,queueName,CrossoverStrategies.ONE);
         }
 
     };
@@ -94,7 +101,7 @@ public void testerabbit() throws IOException, TimeoutException {
             Connection connection=factory.newConnection();
             Channel channel=connection.createChannel();
 
-            String resultsQueue = Producer.QUEUE_NAME + "_results";
+            String resultsQueue = (this.id+jobGroupRI.getName()) + "_results";
 
             channel.queueDeclare(resultsQueue, false, false, false, null);
             String sendResults = "sendresults";
@@ -118,6 +125,11 @@ public void testerabbit() throws IOException, TimeoutException {
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + message + "'");
+                if(message.compareTo("Stopping")==0){
+                    Thread.currentThread().interrupt();
+                }
+
+                message = message + " worker: " + this.id;
                 channel.basicPublish("", sendResults, null, message.getBytes("UTF-8"));
                 System.out.println(" [x] Sent '" + message + "'");
             };
