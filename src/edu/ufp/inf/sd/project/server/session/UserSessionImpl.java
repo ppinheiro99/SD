@@ -21,13 +21,23 @@ public class UserSessionImpl extends UnicastRemoteObject implements UserSessionR
     private DBMockup db;
     private AuthFactoryImpl factory;
     private UserSessionRI sessionRI;
+    private String token;
 
     ///////////////////////////////////////////
     // Constructor
-    public UserSessionImpl(User user, AuthFactoryImpl factory) throws RemoteException {
+    public UserSessionImpl(User user, AuthFactoryImpl factory,String token) throws RemoteException {
         this.user = user;
         this.factory = factory;
         this.db = this.factory.getDb();
+        this.token=token;
+
+       /* for (User u: db.getUsers()) {
+            if (u.getUsername().equals(JWT.decodeJWT(token).getIssuer())){
+                this.user=u;
+                break;
+            }
+        }*/
+
     }
 
     ///////////////////////////////////////////

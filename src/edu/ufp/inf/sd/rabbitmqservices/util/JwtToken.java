@@ -25,19 +25,22 @@ import java.util.Map;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class JwtToken {
 
-     private RsaJsonWebKey rsaJsonWebKey = RsaJwkGenerator.generateJwk(2048);  //chave publica!!! tem de ser conhecida pelos 2
+     //private RsaJsonWebKey rsaJsonWebKey = RsaJwkGenerator.generateJwk(2048);  //chave publica!!! tem de ser conhecida pelos 2
      private String username;
      private String password;
 
     public JwtToken(String username,String password) throws JoseException {
         this.username=username;
 
+
     }
 
-    public String encode() throws JoseException, MalformedClaimException {
+    public static String encode(String issuer, String subject,RsaJsonWebKey rsaJsonWebKey) throws JoseException, MalformedClaimException {
             // We need a signing key, so we'll create one just for this example. Usually
 // the key would be read from your application configuration instead.
        /* Key key = MacProvider.generateKey();
@@ -76,14 +79,14 @@ public class JwtToken {
 
             // Create the Claims, which will be the content of the JWT
             JwtClaims claims = new JwtClaims();
-            claims.setIssuer(password);  // who creates the token and signs it
+            claims.setIssuer(issuer);  // who creates the token and signs it
             claims.setAudience("Audience"); // to whom the token is intended to be sent
             claims.setExpirationTimeMinutesInTheFuture(10); // time when the token will expire (10 minutes from now)
             claims.setGeneratedJwtId(); // a unique identifier for the token
             claims.setIssuedAtToNow();  // when the token was issued/created (now)
             claims.setNotBeforeMinutesInThePast(2); // time before which the token is not yet valid (2 minutes ago)
-            claims.setSubject("subject"); // the subject/principal is whom the token is about
-            claims.setClaim(username, username+"@example.com"); // additional claims/attributes about the subject can be added
+            claims.setSubject(subject); // the subject/principal is whom the token is about
+            claims.setClaim(issuer, issuer+"@example.com"); // additional claims/attributes about the subject can be added
             List<String> groups = Arrays.asList("group-one", "other-group", "group-three");
             claims.setStringListClaim("groups", groups); // multi-valued claims work too and will end up as a JSON array
 
@@ -120,7 +123,7 @@ public class JwtToken {
             return jwt;
         }
 
-        public boolean decode(String jwt) throws MalformedClaimException, JoseException {
+        public static JwtClaims decode(String jwt,RsaJsonWebKey rsaJsonWebKey) throws MalformedClaimException, JoseException {
 
             // Use JwtConsumerBuilder to construct an appropriate JwtConsumer, which will
             // be used to validate and process the JWT.
@@ -133,9 +136,9 @@ public class JwtToken {
                     .setRequireExpirationTime() // the JWT must have an expiration time
                     .setAllowedClockSkewInSeconds(30) // allow some leeway in validating time based claims to account for clock skew
                     .setRequireSubject() // the JWT must have a subject claim
-                    .setExpectedIssuer("Issuer") // whom the JWT needs to have been issued by
+                   // .setExpectedIssuer(username) // whom the JWT needs to have been issued by
                     .setExpectedAudience("Audience") // to whom the JWT is intended for
-                    .setVerificationKey(this.rsaJsonWebKey.getKey()) // verify the signature with the public key
+                    .setVerificationKey(rsaJsonWebKey.getKey()) // verify the signature with the public key
                     .setJwsAlgorithmConstraints( // only allow the expected signature algorithm(s) in the given context
                             //AlgorithmConstraints.ConstraintType., AlgorithmIdentifiers.RSA_USING_SHA256) // which is only RS256 here
                             new AlgorithmConstraints(WHITELIST,
@@ -146,7 +149,7 @@ public class JwtToken {
                 //  Validate the JWT and process it to the Claims
                 JwtClaims jwtClaims = jwtConsumer.processToClaims(jwt);
                 System.out.println("JWT validation succeeded! " + jwtClaims);
-                return true;
+                return jwtClaims;
             } catch (InvalidJwtException e) {
                 // InvalidJwtException will be thrown, if the JWT failed processing or validation in anyway.
                 // Hopefully with meaningful explanations(s) about what went wrong.
@@ -159,16 +162,16 @@ public class JwtToken {
                 // Whether or not the JWT has expired being one common reason for invalidity
                 if (e.hasExpired()) {
                     System.out.println("JWT expired at " + e.getJwtContext().getJwtClaims().getExpirationTime());
-                    return false;
+                    return null;
                 }
 
                 // Or maybe the audience was invalid
                 if (e.hasErrorCode(ErrorCodes.AUDIENCE_INVALID)) {
                     System.out.println("JWT had wrong audience: " + e.getJwtContext().getJwtClaims().getAudience());
-                    return false;
+                    return null;
                 }
 
-                return false;
+                return null;
 
             }
         }

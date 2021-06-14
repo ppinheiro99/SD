@@ -7,6 +7,8 @@ import edu.ufp.inf.sd.project.server.states.GroupStatusState;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.rabbitmqservices.util.JwtToken;
 import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
+import org.jose4j.jwk.RsaJsonWebKey;
+import org.jose4j.jwk.RsaJwkGenerator;
 import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.lang.JoseException;
 
@@ -38,11 +40,12 @@ public class JobShopClient{
     public boolean isLoggedIn = false;
     private AuthFactoryRI authRI;
     private UserSessionRI sessionRI;
+    private final RsaJsonWebKey rsaJsonWebKey = RsaJwkGenerator.generateJwk(2048);  //chave publica!!! tem de ser conhecida pelos 2
 
 
     ///////////////////////////////////////////
     // Main
-    public static void main(String[] args) {
+    public static void main(String[] args) throws JoseException {
         if (args != null && args.length < 2) {
             System.exit(-1);
         } else {
@@ -53,7 +56,7 @@ public class JobShopClient{
     }
     ///////////////////////////////////////////
     // Initial Setup
-    public JobShopClient(String[] args) {
+    public JobShopClient(String[] args) throws JoseException {
         try {
             String registryIP = args[0];
             String registryPort = args[1];
@@ -201,13 +204,12 @@ public class JobShopClient{
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
-        JwtToken jdt= new JwtToken(username,password);
-        String token= jdt.encode();
-        jdt.decode(token);
-        //JwtToken.teste();
+
+        String token= JwtToken.encode(username,password,rsaJsonWebKey);
 
 
-        sessionRI = authRI.login(token);
+        sessionRI = authRI.login(token,rsaJsonWebKey);
+        //sessionRI = authRI.login(username,password);
 
         if(sessionRI != null){
             System.out.println("Sessao iniciada com sucesso!");
