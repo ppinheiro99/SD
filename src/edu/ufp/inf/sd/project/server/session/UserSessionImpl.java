@@ -5,6 +5,9 @@ import edu.ufp.inf.sd.project.server.auth.AuthFactoryImpl;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupImpl;
 import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
 import edu.ufp.inf.sd.project.server.user.User;
+import edu.ufp.inf.sd.rabbitmqservices.util.JwtToken;
+import io.jsonwebtoken.Claims;
+import org.jose4j.jwk.RsaJsonWebKey;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,6 +17,8 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UserSessionImpl extends UnicastRemoteObject implements UserSessionRI {
 
@@ -31,12 +36,6 @@ public class UserSessionImpl extends UnicastRemoteObject implements UserSessionR
         this.db = this.factory.getDb();
         this.token=token;
 
-       /* for (User u: db.getUsers()) {
-            if (u.getUsername().equals(JWT.decodeJWT(token).getIssuer())){
-                this.user=u;
-                break;
-            }
-        }*/
 
     }
 

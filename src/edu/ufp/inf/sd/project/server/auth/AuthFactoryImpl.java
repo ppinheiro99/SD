@@ -5,6 +5,7 @@ import edu.ufp.inf.sd.project.server.session.UserSessionImpl;
 import edu.ufp.inf.sd.project.server.session.UserSessionRI;
 import edu.ufp.inf.sd.project.server.user.User;
 import edu.ufp.inf.sd.rabbitmqservices.util.JwtToken;
+import io.jsonwebtoken.Claims;
 import org.jose4j.jwk.RsaJsonWebKey;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
@@ -33,20 +34,26 @@ public class AuthFactoryImpl extends UnicastRemoteObject implements AuthFactoryR
         return sessions;
     }
 
-    public Boolean registry(String username, String password) throws RemoteException{
-        if(this.db.usernameIsAvailable(username)){
-            this.db.register(username,password);
-            return true;
+    public Boolean registry(String token) throws RemoteException, MalformedClaimException, JoseException {
+        //System.out.println(rsaJsonWebKey);
+        JwtClaims claims =JwtToken.decode(token);
+        if(claims==null) {
+            System.out.println("Erro no registo por JWT Token!");
+            return null;
         }
 
+        if(this.db.usernameIsAvailable(claims.getIssuer())){
+            this.db.register(claims.getIssuer(), claims.getSubject());
+            return true;
+        }
 
         return false;
     }
 
-    public UserSessionRI login(String token, RsaJsonWebKey rsaJsonWebKey) throws RemoteException, MalformedClaimException, JoseException {
+    public UserSessionRI login(String token) throws RemoteException, MalformedClaimException, JoseException {
 
         //System.out.println(rsaJsonWebKey);
-        JwtClaims claims =JwtToken.decode(token,rsaJsonWebKey);
+        JwtClaims claims =JwtToken.decode(token);
         if(claims==null) {
             System.out.println("Username ou Password invalidos!");
             return null;
@@ -66,7 +73,7 @@ public class AuthFactoryImpl extends UnicastRemoteObject implements AuthFactoryR
             if (db.exists(username, password)) { // verifica se o user está na BD
                 UserSessionRI session;
                 System.out.println("Login feito com sucesso " + "User: " +username + " pass: " +password);
-                session = new UserSessionImpl(new User(username, password),this,token ); // Criamos uma sessao
+                session = new UserSessionImpl(new User(username, password),this,token); // Criamos uma sessao
                 this.sessions.put(username, session); // adicionamos à HashMap
                 return sessions.get(username);
             }

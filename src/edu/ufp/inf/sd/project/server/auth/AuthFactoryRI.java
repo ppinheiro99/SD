@@ -10,8 +10,8 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface AuthFactoryRI extends Remote {
-    public Boolean registry(String username, String password) throws RemoteException;
-    //public UserSessionRI login(String username, String password) throws RemoteException;
-    public UserSessionRI login(String token, RsaJsonWebKey rsaJsonWebKey) throws RemoteException, MalformedClaimException, JoseException;
+
+    public Boolean registry(String token) throws RemoteException, MalformedClaimException, JoseException;
+    public UserSessionRI login(String token) throws RemoteException, MalformedClaimException, JoseException;
 
 }
