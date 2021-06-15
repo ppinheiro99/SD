@@ -1,6 +1,7 @@
 package edu.ufp.inf.sd.project.server.jobgroup;
 
 import com.rabbitmq.client.*;
+import edu.ufp.inf.sd.project.client.WorkerImpl;
 import edu.ufp.inf.sd.project.client.WorkerRI;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
@@ -14,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
@@ -70,12 +73,19 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
             channel.queueDeclare(qeue, false, false, false, null);
             //channel.queueDeclare(EXCHANGE_NAME, false, false, false, null);
-            String message = path;
-            Thread.currentThread().sleep(2000);
-            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
-            //channel.basicPublish("", EXCHANGE_NAME, null, message.getBytes("UTF-8"));
-            System.out.println(" [x] Sent '" + message + "'");
+            int i = 0;
+            String message = "";
+            ///Vamos percorrer o array de ficheiros para enviarmos um ficheiro de cada vez
+            while (i < this.ficheiros.size()){
+                 message = this.ficheiros.get(i);
 
+                channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+                //channel.basicPublish("", EXCHANGE_NAME, null, message.getBytes("UTF-8"));
+                System.out.println(" [x] Sent '" + message + "'");
+                i++;
+            }
+
+            Thread.currentThread().sleep(2000);
             getResults();
 
             Thread.currentThread().sleep(10000);
@@ -87,7 +97,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
 
             System.out.println(" [x] Sent '" + message + "'");
-            int i = 0 ;
+           i = 0 ;
             while(i<20000000){
                 i++;
             }
@@ -361,12 +371,12 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     //////////////////////////////////
     // Methods RI
     @Override
-    public GroupInfoState attach(WorkerRI workerRI) throws RemoteException {
+    public void attach(WorkerRI workerRI) throws RemoteException {
         if(this.strat.compareTo("ts")==0){
             // Already in the list.
             if(this.workers.containsValue(workerRI) || this.groupStatusState.getStatus().compareTo("PAUSE")==0 || this.groupStatusState.getStatus().compareTo("MATCH_FOUND") == 0){
                 server_says(" Worker already on the list! or state is paused or match_found!");
-                return null;
+                return ;
             }
             ///Se for >10 podemos dar attach , senao temos q verificar o winner
             if(this.coins > 10){
@@ -378,25 +388,25 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                     newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 1000 + 1);
 
                 server_says("worker id: " + newID);
-                this.coins--;
+
                 this.workers.put(newID, workerRI);
                 workerRI.setId(newID);
 
-                check_nrworkers();
-                return this.groupInfoState;
+                check_nrworkers(newID);
+                return ;
             }else {
                 try {
                     verify_winner();
                 } catch (IOException | InterruptedException | TimeoutException e) {
                     e.printStackTrace();
                 }
-                return null;
+                return ;
             }
         }else {
             // Already in the list.
             if(this.workers.containsValue(workerRI) || this.groupStatusState.getStatus().compareTo("PAUSE")==0 || this.groupStatusState.getStatus().compareTo("MATCH_FOUND") == 0){
                 server_says(" Worker already on the list! or state is paused or match_found!");
-                return null;
+                return ;
             }
             ///Se for >10 podemos dar attach , senao temos q verificar o winner
             if(this.coins > 10){
@@ -412,53 +422,79 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 this.workers.put(newID, workerRI);
                 workerRI.setId(newID);
                 //Antes de darmos o trabalho ao worker , temos que abrir o canal de comunicaçao , chamando o producer
-                this.coins--;
+
                 String finalNewID = newID;
-                Thread thread = new Thread(){
-                    public void run(){
-                        System.out.println("Thread Running");
-                        producer(finalNewID);
-                    }
-                };
-                thread.start();
+                check_nrworkers(finalNewID);
+                return ;
+
 
 
                 //this.workers.get(newID).receiveJob(this.groupInfoState);
-                return this.groupInfoState;
+
             }else {
                 try {
                     verify_winner();
                 } catch (IOException | InterruptedException | TimeoutException e) {
                     e.printStackTrace();
                 }
-                return null;
+                return ;
             }
         }
     }
 
-    private void check_nrworkers() {
+    public String getStrat() {
+        return strat;
+    }
+
+    private void check_nrworkers(String id) {
         ///Se os workers attached forem maiores ou iguais que o nr de workers minimo , arrancamos o algoritmo
 
         if(this.workers.size() >= nrworkers){
-            notifyAllObservers("The server has a task for you");
-            for(Map.Entry<String, WorkerRI> entry : this.workers.entrySet()) {
-                String key = entry.getKey();
-                //Se o worker ainda nao tiver recebido o trabalho , entao enviamos
+
+            if(this.strat.compareTo("ga")==0){
+                for(Map.Entry<String, WorkerRI> entry : this.workers.entrySet()) {
+                    String key = entry.getKey();
+                    //Se o worker ainda nao tiver recebido o trabalho , entao enviamos
+                    this.coins--;
+                    Thread thread = new Thread(){
+                        public void run(){
+                            System.out.println("Thread Running");
+                            producer(entry.getKey());
+
+                        }
+                    };
+                    thread.start();
 
 
-                try {
-                    this.workers.get(key).receiveJob(this.groupInfoState);
 
-                } catch (IOException e) {
-                    e.printStackTrace();
+
+
                 }
 
+                return;
+            }else {
+                notifyAllObservers("The server has a task for you");
+                for(Map.Entry<String, WorkerRI> entry : this.workers.entrySet()) {
+                    String key = entry.getKey();
+                    //Se o worker ainda nao tiver recebido o trabalho , entao enviamos
 
 
+                    try {
+                        this.coins--;
+                        this.workers.get(key).receiveJob(this.groupInfoState);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+
+                }
+                return;
             }
 
         }
-        return;
+
     }
 
 

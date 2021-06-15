@@ -32,7 +32,6 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
     private String id;
     private String user;
     protected final JobGroupRI jobGroupRI;
-    private GroupInfoState groupInfoState;
     private GroupStatusState groupStatus;
     private JobShopClient jobs;
     private Consumer c = new Consumer();
@@ -43,12 +42,21 @@ public class WorkerImpl extends UnicastRemoteObject implements WorkerRI {
         this.user = user;
         this.jobGroupRI = jobgroupRI;
         this.jobs = j;
-        this.groupInfoState = this.jobGroupRI.attach(this);
+        this.jobGroupRI.attach(this);
+       check_Strat();
 
-        testerabbit();
+
+
     }
     public static void main(String[] args){}
 
+private void check_Strat() throws IOException, TimeoutException {
+    if(this.jobGroupRI.getStrat().compareTo("ga") == 0){
+        testerabbit();
+        return;
+    }
+    return;
+}
 public void testerabbit() throws IOException, TimeoutException {
 
     ConnectionFactory factory = new ConnectionFactory();
@@ -74,8 +82,28 @@ public void testerabbit() throws IOException, TimeoutException {
             System.out.println("Killing myself...");
             Thread.currentThread().interrupt();
         } else{
+            File pasta = new File("edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/");
 
-            algoritmo(message,queueName,CrossoverStrategies.ONE);
+            if (!pasta.exists()) pasta.mkdirs();
+
+
+
+
+                String jsspInstancePath ="edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/ficheiro_recebido_"+1000+".txt";
+                File file = new File(jsspInstancePath);
+                try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
+                    out.print(message);
+                    out.flush();
+                    out.close();
+                }
+
+                try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
+                    out.print(message);
+                    out.flush();
+
+                }
+
+            algoritmo(jsspInstancePath,queueName,CrossoverStrategies.ONE);
         }
 
     };

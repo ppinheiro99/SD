@@ -10,14 +10,14 @@ import java.rmi.RemoteException;
 import java.util.concurrent.TimeoutException;
 
 public interface JobGroupRI extends Remote {
-    public GroupInfoState attach(WorkerRI workerRI) throws RemoteException;
+    public void attach(WorkerRI workerRI) throws RemoteException;
 
     public void detach(WorkerRI workerRI) throws RemoteException;
 
     public void setState(GroupStatusState s) throws RemoteException;
 
     public GroupStatusState getState() throws RemoteException;
-
+    public String getStrat() throws RemoteException;
     public int getId() throws RemoteException;
     public String getName() throws RemoteException;
     public int getCoins() throws RemoteException;
