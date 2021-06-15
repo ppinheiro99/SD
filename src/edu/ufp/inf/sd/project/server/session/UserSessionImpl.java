@@ -100,9 +100,9 @@ public class UserSessionImpl extends UnicastRemoteObject implements UserSessionR
      *  Create JobGroup
      */
     @Override
-    public JobGroupRI createJobGroup(String name, int coins,String path,String strat) throws RemoteException {
+    public JobGroupRI createJobGroup(String name, int coins,ArrayList<String> path,String strat, String nrworkers) throws RemoteException {
         System.out.println("[User: " + this.user.getUsername() + "] novo grupo: " + name);
-        JobGroupImpl jobGroup = new JobGroupImpl(coins,name,this.getUser().getUsername(),path,strat);
+        JobGroupImpl jobGroup = new JobGroupImpl(coins,name,this.getUser().getUsername(),path,strat, nrworkers);
         this.db.addJobGroupRi(jobGroup);
         return jobGroup;
     }

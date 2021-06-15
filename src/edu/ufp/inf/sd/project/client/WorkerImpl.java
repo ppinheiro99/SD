@@ -14,9 +14,13 @@ import edu.ufp.inf.sd.project.util.geneticalgorithm.CrossoverStrategies;
 import edu.ufp.inf.sd.project.util.geneticalgorithm.GeneticAlgorithmJSSP;
 import edu.ufp.inf.sd.project.util.tabusearch.TabuSearchJSSP;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -158,7 +162,7 @@ public void testerabbit() throws IOException, TimeoutException {
 
     public void receiveJob(GroupInfoState groupInfoState) throws IOException {
         //Recebemos o nosso job a desempenhar , executamos e enviamos  o resultado para o jobgroup
-        Integer makespan = processJob(groupInfoState.getPath());
+        int makespan = processJob(groupInfoState.getPath());
         jobGroupRI.receiveResults(this.id,makespan);
 
     }
@@ -175,15 +179,51 @@ public void testerabbit() throws IOException, TimeoutException {
     /*
      * Process and do the job received from jobGroup.
      */
-    private int processJob(String jsspInstancePath) throws IOException {
+    private int processJob(ArrayList<String> ficheiros) throws IOException {
+        File pasta = new File("edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/");
+        ArrayList<Integer> makespans = new ArrayList<>();
+        if (!pasta.exists()) pasta.mkdirs();
+
+
+        for (String ficheiro: ficheiros) {
+            int indice = makespans.size()+1;
+            String jsspInstancePath ="edu/ufp/inf/sd/project/data/workers/"+this.getUser()+"/ficheiro_recebido_"+indice+".txt";
+            File file = new File(jsspInstancePath);
+            try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
+                out.print(ficheiro);
+                out.flush();
+                out.close();
+            }
+
+
+
+
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
+            out.print(ficheiro);
+            out.flush();
+
+        }
 
 
         TabuSearchJSSP ts = new TabuSearchJSSP(jsspInstancePath);
         int makespan = ts.run();
-
+        makespans.add(makespan);
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "[TS] Makespan for {0} = {1}", new Object[]{jsspInstancePath,String.valueOf(makespan)});
-        workerSays("Job Done! Makespan was :" + makespan);
-        return makespan;
+
+        }
+
+        int i = 0,media = 0;
+        while(i < makespans.size()){
+            media = media + makespans.get(i);
+            i++;
+        }
+        media = media / makespans.size();
+
+        workerSays("Job Done! Makespan average was :" + media);
+
+
+        return media;
     }
 
     /*

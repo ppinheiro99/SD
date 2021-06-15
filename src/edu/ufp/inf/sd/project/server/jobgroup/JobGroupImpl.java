@@ -1,15 +1,9 @@
 package edu.ufp.inf.sd.project.server.jobgroup;
 
 import com.rabbitmq.client.*;
-import edu.ufp.inf.sd.RabbitUtils;
 import edu.ufp.inf.sd.project.client.WorkerRI;
-import edu.ufp.inf.sd.project.producer.Producer;
 import edu.ufp.inf.sd.project.server.states.GroupInfoState;
 import edu.ufp.inf.sd.project.server.states.GroupStatusState;
-import edu.ufp.inf.sd.project.util.geneticalgorithm.CrossoverStrategies;
-import edu.ufp.inf.sd.project.util.geneticalgorithm.GeneticAlgorithmJSSP;
-import edu.ufp.inf.sd.rmi._05_observer.server.State;
-import edu.ufp.inf.sd.rmi._05_observer.server.SubjectImpl;
 
 
 import java.io.IOException;
@@ -20,8 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
@@ -39,20 +31,22 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     private final int id;
     private final String name;
     private final String owner;
-    private final String path;
+    private final ArrayList<String> ficheiros;
     private final String strat;
+    private final Integer nrworkers;
     private String exchangeName;
 
     //////////////////////////////////
     // Constructor
-    public JobGroupImpl(int coins,String name, String owner,String path,String strat) throws RemoteException {
+    public JobGroupImpl(int coins,String name, String owner,ArrayList<String> path,String strat, String nrworkers) throws RemoteException {
         super();
         this.name = name;
         this.coins = coins;
         this.owner = owner;
-        this.path = path;
+        this.ficheiros = path;
         this.id = ++nGroups;
         this.strat = strat;
+        this.nrworkers = Integer.parseInt(nrworkers);
         this.makespan = new HashMap<>();
         this.workers = new HashMap<>();
         //this.exchangeName = "exchange_" + this.id + "_" + this.name;
@@ -185,7 +179,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-    public void receiveResults(String id , Integer makespan) {
+    public void receiveResults(String id , int makespan) {
         server_says("Getting the result from " + id);
         ///Se o nosso worker estiver associado ao jobgroup
         if(this.workers.containsKey(id)){
@@ -193,7 +187,8 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             this.makespan.put(id,makespan);
 
         }
-
+        //a cada resultado recebido retiramos uma moeda, mas so pagamos na parte de anunciar vencedor
+        this.coins--;
         server_says("Result Received");
         try {
             verify_winner();
@@ -310,7 +305,10 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
                 String key = entry.getKey();
                 Integer value = entry.getValue();
-                //Cada worker recebe 1 pelo trabalho
+
+
+
+                 //int media = (int) value.stream().mapToInt(val -> val).average().orElse(0.0);
 
                 this.workers.get(entry.getKey()).receiveCoins(1);
                 if(aux == 0){
@@ -319,7 +317,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
                 }
                 if(value < aux){
-
                     aux = value;
                     winner = key;
 
@@ -342,7 +339,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
             });
         }
 
@@ -377,19 +373,16 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 // Generate a new Unique ID
                 server_says(" new worker detected. Generating new id ...");
 
-                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 1000 + 1);
                 while(this.workers.containsKey(newID))
-                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 1000 + 1);
 
                 server_says("worker id: " + newID);
                 this.coins--;
                 this.workers.put(newID, workerRI);
                 workerRI.setId(newID);
-                try {
-                    this.workers.get(newID).receiveJob(this.groupInfoState);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+
+                check_nrworkers();
                 return this.groupInfoState;
             }else {
                 try {
@@ -410,9 +403,9 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 // Generate a new Unique ID
                 server_says(" new worker detected. Generating new id ...");
 
-                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                String newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 1000 + 1);
                 while(this.workers.containsKey(newID))
-                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 10 + 1);
+                    newID = "worker_" + ThreadLocalRandom.current().nextInt(0, 1000 + 1);
 
                 server_says("worker id: " + newID);
 
@@ -443,10 +436,37 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         }
     }
 
+    private void check_nrworkers() {
+        ///Se os workers attached forem maiores ou iguais que o nr de workers minimo , arrancamos o algoritmo
+
+        if(this.workers.size() >= nrworkers){
+            notifyAllObservers("The server has a task for you");
+            for(Map.Entry<String, WorkerRI> entry : this.workers.entrySet()) {
+                String key = entry.getKey();
+                //Se o worker ainda nao tiver recebido o trabalho , entao enviamos
+
+
+                try {
+                    this.workers.get(key).receiveJob(this.groupInfoState);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+
+            }
+
+        }
+        return;
+    }
+
+
     @Override
     public void detach(WorkerRI workerRI) throws RemoteException{
-        System.out.println("\nDetach user ...");
+        System.out.println("\nDetach user ..." + workerRI.getUser());
         workers.remove(workerRI);
+
     }
 
     @Override
@@ -459,7 +479,8 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
     public void setState(GroupStatusState s) throws RemoteException{
         System.out.println("\nSet state ...");
         this.groupStatusState = s;
-        //this.notifyAllObservers();
+
+        this.notifyAllObservers(this.groupStatusState.getStatus());
     }
 
     private void server_says(String msg){
