@@ -161,7 +161,7 @@ public void testerabbit() throws IOException, TimeoutException {
                     Thread.currentThread().interrupt();
                 }
 
-                message = message + " worker: " + this.id;
+                message = message + "| worker: " + this.id;
                 channel.basicPublish("", sendResults, null, message.getBytes("UTF-8"));
                 System.out.println(" [x] Sent '" + message + "'");
             };

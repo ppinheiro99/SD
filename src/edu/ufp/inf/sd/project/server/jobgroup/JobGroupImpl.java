@@ -171,6 +171,15 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
                 System.out.println(" [x] Received '" + message + "'");
+                String aux = message.substring(0,8);
+                if(aux.compareTo("Makespan")==0){
+                    String[] arrStr = message.split("worker:");
+                    String numberOnly= arrStr[0].replaceAll("[^0-9]", "");
+                    System.out.println(" [x] MAKESPAN: '" + numberOnly + "'");
+                    String[] arrOfStr = message.split("worker_");
+                    this.makespan.put(arrOfStr[1],Integer.parseInt(numberOnly));
+                }
+
 
 
 
@@ -240,31 +249,14 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         String winner="";
 
         if(this.strat.compareTo("ga")==0){
-            ConnectionFactory factory=new ConnectionFactory();
-            factory.setHost("localhost");
-            factory.setUsername("guest");
-            factory.setPassword("guest");
-            //factory.setPassword("guest4rabbitmq");
-
-            /* try-with-resources\. will close resources automatically in reverse order... avoids finally */
-            //Create a channel, which is where most of the API resides
-            Connection connection=factory.newConnection();
-            Channel channel=connection.createChannel();
-            //verificamos se todas as filas ja estao vazias
-
-            for(int i= 0 ; i < filas.size();i++){
-                AMQP.Queue.DeclareOk response = channel.queueDeclarePassive(filas.get(i)+"_results");
-                if(response.getMessageCount()>0){
-                    return;
-                }
-            }
-
-            //se a estrategia for ga , damos um sleep de 6000milis , para termos tempo de receber os resultados
 
             for(Map.Entry<String, Integer> entry : this.makespan.entrySet()) {
                 String key = entry.getKey();
                 Integer value = entry.getValue();
-                //Cada worker recebe 1 pelo trabalho
+
+
+
+                //int media = (int) value.stream().mapToInt(val -> val).average().orElse(0.0);
 
                 this.workers.get(entry.getKey()).receiveCoins(1);
                 if(aux == 0){
@@ -273,34 +265,21 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
                 }
                 if(value < aux){
-
                     aux = value;
                     winner = key;
 
                 }
             }
-
             ///Depois de encontrado a melhor soluçao:
 
             //Mudamos o estado do jobgroup para CONCLUIDO
             this.groupStatusState.setStatus("MATCH_FOUND");
             //Enviamos notificaçao a todos os workers da solução
-            String message = "Winner foi:" + winner + "Makespan:" + aux + "\n";
-
-            channel.queueDeclare(id+this.name, false, false, false, null);
-            channel.exchangeDeclare(this.exchangeName, "direct");
-            channel.queueBind(id+this.name, this.exchangeName, id+this.name);
-
-            for(int i= 0 ; i < filas.size();i++){
-                channel.basicPublish(this.exchangeName, filas.get(i), null, message.getBytes("UTF-8"));
-                System.out.println(" [x] Sent '" + message + "'");
-                channel.queueDelete(filas.get(i));
-            }
-
+            notifyAllObservers("Nome do utilizador:" + winner + "Makespan:" + aux + "\n");
             //plafon a 0
             this.coins = 0;
             this.workers.get(winner).receiveCoins(10);
-            System.out.println();
+            System.out.println("Winner foi:" + winner + "Makespan:" + aux + "\n");
             //Fazemos detach de todos os workers
             this.workers.forEach((id, workerRI) -> {
                 try {
@@ -308,7 +287,6 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
             });
         }else {
 
@@ -452,14 +430,13 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
         if(this.workers.size() >= nrworkers){
 
             if(this.strat.compareTo("ga")==0){
-                for(Map.Entry<String, WorkerRI> entry : this.workers.entrySet()) {
-                    String key = entry.getKey();
+
                     //Se o worker ainda nao tiver recebido o trabalho , entao enviamos
                     this.coins--;
                     Thread thread = new Thread(){
                         public void run(){
                             System.out.println("Thread Running");
-                            producer(entry.getKey());
+                            producer(id);
 
                         }
                     };
@@ -469,7 +446,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
 
-                }
+
 
                 return;
             }else {
