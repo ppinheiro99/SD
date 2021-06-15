@@ -2,7 +2,6 @@ package edu.ufp.inf.sd.project.server.states;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 public class GroupInfoState implements Serializable {
 
@@ -12,7 +11,7 @@ public class GroupInfoState implements Serializable {
 
     //////////////////////////////////
     // Constructor
-    public GroupInfoState(ArrayList<String> path, String exchange) {
+    public GroupInfoState(ArrayList<String> path,String exchange) {
         this.path = path;
         this.exchangeName = exchange;
     }
@@ -24,8 +23,7 @@ public class GroupInfoState implements Serializable {
     }
     // Get's & Set's
 
-
-    public ArrayList<String> getPath() {
+    public ArrayList<String>  getPath() {
         return path;
     }
 }

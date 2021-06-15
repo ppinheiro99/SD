@@ -20,7 +20,4 @@ call setenv server
 @REM # * java.security.policy property is used to specify the policy file that contains the permissions you intend to grant.
 java -cp %CLASSPATH% -Djava.rmi.server.codebase=%SERVER_CODEBASE% -Djava.rmi.server.hostname=%SERVER_RMI_HOST% -Djava.security.policy=%SERVER_SECURITY_POLICY% %JAVAPACKAGEROLE%.%SERVER_CLASS_PREFIX%%SERVER_CLASS_POSTFIX% %REGISTRY_HOST% %REGISTRY_PORT% %SERVICE_NAME_ON_REGISTRY%
 
-echo %ABSPATH2CLASSES%
-
-
 @cd %ABSPATH2SRC%\%JAVASCRIPTSPATH%

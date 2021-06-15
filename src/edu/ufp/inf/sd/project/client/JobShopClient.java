@@ -13,6 +13,26 @@ import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.lang.JoseException;
 
 import java.io.*;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.rmi.NotBoundException;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.Random;
+
+import edu.ufp.inf.sd.project.server.auth.AuthFactoryRI;
+import edu.ufp.inf.sd.project.server.jobgroup.JobGroupRI;
+import edu.ufp.inf.sd.project.server.session.UserSessionRI;
+import edu.ufp.inf.sd.project.server.states.GroupStatusState;
+import edu.ufp.inf.sd.project.server.user.User;
+import edu.ufp.inf.sd.rmi.util.rmisetup.SetupContextRMI;
+
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -33,7 +53,9 @@ import java.util.logging.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 
-public class JobShopClient {
+
+
+public class JobShopClient{
 
     private SetupContextRMI contextRMI;
     private JobGroupRI jobGroupRI;
@@ -41,6 +63,9 @@ public class JobShopClient {
     public boolean isLoggedIn = false;
     private AuthFactoryRI authRI;
     private UserSessionRI sessionRI;
+    private ArrayList<WorkerImpl> workers = new ArrayList<WorkerImpl>();
+    private Random random = new Random();
+    private Integer workersNr = random.nextInt(8 - 1 + 1) + 1 ;
 
     ///////////////////////////////////////////
     // Main
@@ -76,7 +101,6 @@ public class JobShopClient {
             Registry registry = contextRMI.getRegistry();
             if (registry != null) {
                 String serviceUrl = contextRMI.getServicesUrl(0);
-                System.out.println("####chega aqui###");
                 authRI = (AuthFactoryRI) registry.lookup(serviceUrl);
 
             } else {
@@ -104,34 +128,6 @@ public class JobShopClient {
                     // Methods Menu
                 else
                     menu_session();
-
-                // Methods Menu
-                //else {
-
-                // menu_session();
-
-
-                //============ Call TS remote service ============
-                    /*
-                    String jsspInstancePath = "edu/ufp/inf/sd/project/data/la01.txt";
-                    int makespan = this.jobShopRI.runTS(jsspInstancePath);
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO,
-                            "[TS] Makespan for {0} = {1}",
-                            new Object[]{jsspInstancePath, String.valueOf(makespan)});
-
-
-                    //============ Call GA ============
-                    String queue = "jssp_ga";
-                    String resultsQueue = queue + "_results";
-                    CrossoverStrategies strategy = CrossoverStrategies.ONE;
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO,
-                            "GA is running for {0}, check queue {1}",
-                            new Object[]{jsspInstancePath, resultsQueue});
-                    GeneticAlgorithmJSSP ga = new GeneticAlgorithmJSSP(jsspInstancePath, queue, strategy);
-                    ga.run();
-                    */
-
-                //  }
 
             } catch (RemoteException ex) {
                 Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
@@ -299,10 +295,7 @@ public class JobShopClient {
         if (option.equals("8")) {
             continue_jobgroup();
         }
-
-
     }
-
 
     private void add_coins() throws RemoteException {
         if (this.sessionRI != null) {
@@ -337,13 +330,7 @@ public class JobShopClient {
         }
     }
 
-
-    public static String readFile(String path, Charset encoding) throws IOException {
-        return Files.readString(Paths.get(path), encoding);
-    }
-
     ///Create JobGroup
-
     private void jobgroup_create() throws IOException, TimeoutException, InterruptedException {
         if (this.sessionRI != null) {
             ArrayList<String> ficheiros = new ArrayList<>();
@@ -355,14 +342,14 @@ public class JobShopClient {
             for (int i = 0; i < Integer.parseInt(nr_path); i++) {
                 System.out.println("\nNome do ficheiro (sem \".txt\":");
                 String name_file = scanner.nextLine();
-                String path = "edu/ufp/inf/sd/project/data/" + name_file + ".txt";
+                String path = "edu/ufp/inf/sd/project/data/"+name_file+".txt";
                 try {
                     ficheiros.add(readFile(path, StandardCharsets.UTF_8));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-                /**Debug**/System.out.println(ficheiros);
+                /**Debug**/ System.out.println(ficheiros);
 
             }
 
@@ -370,6 +357,8 @@ public class JobShopClient {
             String plafon = scanner.nextLine();
             System.out.println("\nEstrategia para o JobGroup (ts ou ga):");
             String strat = scanner.nextLine();
+            System.out.println("\nNumero minimo de workers para arrancar:");
+            String nrminworker = scanner.nextLine();
 
 
             if (strat.compareTo("ts") == 0 || strat.compareTo("ga") == 0) {
@@ -377,17 +366,12 @@ public class JobShopClient {
                 ///Só podemos criar um jobgroup se o plafon for inferior ao saldo
 
 
-                if (Integer.parseInt(plafon) < sessionRI.showCoins()) {
-                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon), ficheiros, strat);
+
+                if(Integer.parseInt(plafon) < sessionRI.showCoins()){
+                    this.jobGroupRI = this.sessionRI.createJobGroup(name, Integer.parseInt(plafon),ficheiros,strat,nrminworker);
                     //tira ao saldo o plafon para o jobgroup
                     this.getCoinsPayment(-Integer.parseInt(plafon));
                     if (jobGroupRI != null) {
-                        if (jobGroupRI.getCoins() == 10) {
-                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI, this);
-                            jobGroupRI.verify_winner();
-                        } else {
-                            WorkerImpl worker = new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI, this);
-                        }
 
                     } else {
                         System.out.println("Erro ao criar grupo?");
@@ -396,9 +380,11 @@ public class JobShopClient {
                     System.out.println("Plafon é superior ao saldo!");
                 }
             }
-
-
         }
+    }
+
+    public static String readFile(String path, Charset encoding) throws IOException {
+        return Files.readString(Paths.get(path), encoding);
     }
 
 
@@ -428,9 +414,12 @@ public class JobShopClient {
                 System.out.println(name);
 
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if (jobGroupRI != null) {
-                GroupStatusState s = new GroupStatusState("PAUSE");
-                jobGroupRI.setState(s);
+
+            if(jobGroupRI!=null){
+                if(jobGroupRI.getOwner().compareTo(this.sessionRI.showMyUsername())==0){
+                    GroupStatusState s = new GroupStatusState("PAUSE");
+                    jobGroupRI.setState(s);
+                }
             }
         }
     }
@@ -443,26 +432,25 @@ public class JobShopClient {
 
             System.out.println("ID do Grupo: ");
             String id = scanner.nextLine();
+            System.out.println("Quantos workers quer associar ao jobgroup? (" + workersNr + ")"  );
+            String wnr = scanner.nextLine();
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if (jobGroupRI != null) {
-                System.out.println("Criado com sucesso!");
-                ///Temos que verificar se já nao tivemos um worker neste jobgroup(evitar duplicação de esforços)
+            if(jobGroupRI != null) {
+                    //Se o tamanho do nosso arraylist de workers for menor que o numero total de workers que temos , entao ainda podemos associar
+                    if(workers.size() < workersNr){
+                        //Enquanto i for menor que o numero de workers que queremos associar , associamos
+                        for (int i = 0 ; i < Integer.parseInt(wnr) ; i++) {
 
-                ///Temos que verificar se as coins disponiveis no plafon sao suficientes(>10)
+                            workers.add(new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI,this)) ;
+                        }
+                    }
+                    System.out.println("Criado com sucesso!");
 
-                if (jobGroupRI.getCoins() > 10) {
-                    new WorkerImpl(this.sessionRI.showMyUsername(), jobGroupRI, this);
 
-                } else if (jobGroupRI.getCoins() == 10) {
-                    //Se entrar aqui , significa que estamos no limite do plafon para a melhor solução
-                    jobGroupRI.verify_winner();
+
+                }else {
+                    System.out.println("Erro ao adicionar worker!");
                 }
-
-            } else {
-                System.out.println("Erro ao adicionar worker!");
-            }
-
-
         }
     }
 
@@ -472,8 +460,10 @@ public class JobShopClient {
             System.out.print("\nNome do Grupo: ");
             String name = scanner.nextLine();
             //String path = "edu/ufp/inf/sd/project/data/la04.txt";
-            this.sessionRI.deleteJobGroup(Integer.parseInt(name));
-            System.out.println("JobGroup apagado com sucesso!");
+            if(jobGroupRI.getOwner().compareTo(this.sessionRI.showMyUsername())==0){ this.sessionRI.deleteJobGroup(Integer.parseInt(name));
+                System.out.println("JobGroup apagado com sucesso!");}
+
+
 
         }
     }
@@ -488,9 +478,13 @@ public class JobShopClient {
                 System.out.println(name);
 
             JobGroupRI jobGroupRI = this.sessionRI.joinJobGroup(Integer.parseInt(id));
-            if (jobGroupRI != null) {
-                GroupStatusState s = new GroupStatusState("CONTINUE");
-                jobGroupRI.setState(s);
+
+            if(jobGroupRI!=null){
+                if(jobGroupRI.getOwner().compareTo(this.sessionRI.showMyUsername())==0){
+                    GroupStatusState s = new GroupStatusState("CONTINUE");
+                    jobGroupRI.setState(s);
+                }
+
             }
         }
     }
@@ -504,6 +498,4 @@ public class JobShopClient {
             sessionRI.addCoins(coins);
         }
     }
-
-
 }

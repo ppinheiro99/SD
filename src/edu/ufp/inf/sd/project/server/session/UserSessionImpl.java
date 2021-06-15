@@ -9,10 +9,6 @@ import edu.ufp.inf.sd.rabbitmqservices.util.JwtToken;
 import io.jsonwebtoken.Claims;
 import org.jose4j.jwk.RsaJsonWebKey;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
@@ -114,19 +110,9 @@ public class UserSessionImpl extends UnicastRemoteObject implements UserSessionR
      *  Create JobGroup
      */
     @Override
-    public JobGroupRI createJobGroup(String name, int coins, ArrayList<String> ficheiros, String strat) throws RemoteException, FileNotFoundException {
+    public JobGroupRI createJobGroup(String name, int coins,ArrayList<String> path,String strat, String nrworkers) throws RemoteException {
         System.out.println("[User: " + this.user.getUsername() + "] novo grupo: " + name);
-
-   /*    String path= "edu/ufp/inf/sd/project/data/ficheiro_recebido.txt";
-
-        try (PrintStream out = new PrintStream(new FileOutputStream(new File("edu/ufp/inf/sd/project/data/ficheiro_recebido.txt")))) {
-            out.print(ficheiro);
-             out.flush();
-             out.close();
-        }
-*/
-
-        JobGroupImpl jobGroup = new JobGroupImpl(coins,name,this.getUser().getUsername(),ficheiros,strat);
+        JobGroupImpl jobGroup = new JobGroupImpl(coins,name,this.getUser().getUsername(),path,strat, nrworkers);
         this.db.addJobGroupRi(jobGroup);
         return jobGroup;
     }
