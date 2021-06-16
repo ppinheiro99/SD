@@ -457,7 +457,7 @@ public class JobGroupImpl extends UnicastRemoteObject implements JobGroupRI {
 
 
                     try {
-                        this.coins--;
+
                         this.workers.get(key).receiveJob(this.groupInfoState);
 
                     } catch (IOException e) {
