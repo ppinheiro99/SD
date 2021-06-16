@@ -12,21 +12,19 @@
 
 @REM ======================== CHANGE BELOW ACCORDING YOUR PROJECT and PC SETTINGS ========================
 @REM ==== PC STUFF ====
-@Set USERNAME=Samuel Mota
+@Set USERNAME=jotaSV
 
 @Set WORKDRIVE=C
-@rem JDK=%WORKDRIVE%:\Program Files\Java\jdk1.8.0_201
-@rem JDK=%WORKDRIVE%:\Program Files\Java\jdk-16.0.1
-@Set JDK=%WORKDRIVE%:\Program Files\AdoptOpenJDK\jre-15.0.0.36-hotspot
-@rem JDK=%WORKDRIVE%:\Users\Samuel Mota\.jdks\corretto-11.0.9.1
-@Set NETBEANS=NetBeans
-@Set INTELLIJ=IntelliJ
+@Set JDK=C:\Program Files\Java\jdk-16.0.1
+@REM These vars will be used to check the output folder (whereto classes are generated)
+@SET NETBEANS=NetBeans
+@SET INTELLIJ=IntelliJ
 @Set CURRENT_IDE=%INTELLIJ%
 @REM Set CURRENT_IDE=%NETBEANS%
 
 @REM ==== JAVA NAMING STUFF ====
 @Set JAVAPROJ_NAME=SD
-@set JAVAPROJ=%WORKDRIVE%:\\SD
+@set JAVAPROJ=%WORKDRIVE%:\\Users\\%USERNAME%\\Documents\\Github\\%JAVAPROJ_NAME%
 @Set PACKAGE=project
 @Set PACKAGE_PREFIX=edu.ufp.inf.sd
 @Set PACKAGE_PREFIX_FOLDERS=edu/ufp/inf/sd
@@ -102,6 +100,7 @@ IF "%CURRENT_IDE%"=="%INTELLIJ%" (
 @Set SERVER_CODEBASE=http://%SERVER_CODEBASE_HOST%:%SERVER_CODEBASE_PORT%/%JAVAPROJ_JAR_FILE%
 @Set CLIENT_CODEBASE=http://%CLIENT_CODEBASE_HOST%:%CLIENT_CODEBASE_PORT%/%JAVAPROJ_JAR_FILE%
 @Set JAVA_LIB_FOLDER=%JAVAPROJ%\\%JAVAPROJ_DIST_LIB%
+
 @Set JAVA_RABBITMQ_TOOLS=%JAVA_LIB_FOLDER%\\amqp-client-5.11.0.jar;%JAVA_LIB_FOLDER%\\slf4j-api-1.7.30.jar;%JAVA_LIB_FOLDER%\\slf4j-simple-1.7.30.jar;%JAVA_LIB_FOLDER%\\jjwt-0.9.1.jar;%JAVA_LIB_FOLDER%\\jackson-core-2.12.3.jar;%JAVA_LIB_FOLDER%\\jackson-databind-2.12.3.jar;%JAVA_LIB_FOLDER%\\jackson-annotations-2.12.3.jar;%JAVA_LIB_FOLDER%\\jose4j-0.6.3.jar;%JAVA_LIB_FOLDER%\\jose4j-0.6.3.jar
 
 @REM Set CLASSPATH=%JAVAPROJ_CLASSES_FOLDER%;JAVA_RABBITMQ_TOOLS%
